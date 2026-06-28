@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, Menu, X, Inbox } from "lucide-react";
+import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, Menu, X, Inbox, Package, Star } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo, ApertureIcon } from "./Logo";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ const NAV = [
   { to: "/calendar", label: "Calendar", icon: Calendar },
   { to: "/inspiration", label: "Inspiration", icon: ImageIcon },
   { to: "/bookings", label: "Bookings", icon: Inbox },
+  { to: "/packages", label: "Packages", icon: Package },
+  { to: "/reviews", label: "Reviews", icon: Star },
   { to: "/billing", label: "Billing", icon: CreditCard },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
