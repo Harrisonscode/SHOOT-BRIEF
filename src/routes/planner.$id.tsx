@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { SHOOT_TYPES, MOODS, GEAR, SHOT_TAGS, TEMPLATES, progressOf, newId, type Shot } from "@/lib/shoot";
-import { Check, Plus, Trash2, X, LayoutTemplate, AlertTriangle, Lock, Calendar as CalendarIcon, Clock, FileDown } from "lucide-react";
+import { Check, Plus, Trash2, X, LayoutTemplate, AlertTriangle, Lock, Calendar as CalendarIcon, Clock, FileDown, Share2, Copy, CheckCheck } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
