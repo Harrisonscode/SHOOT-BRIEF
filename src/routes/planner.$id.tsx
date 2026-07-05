@@ -574,27 +574,53 @@ function ShootDetails({ shoot, update }: { shoot: Shoot; update: <K extends keyo
       <div className="grid sm:grid-cols-3 gap-3">
         <div>
           <label className="text-xs text-muted-foreground">Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className={cn("mt-1 w-full inline-flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-background text-sm text-left", !shoot.date && "text-muted-foreground")}>
-                <CalendarIcon className="h-4 w-4 opacity-70" />
-                {shoot.date ? format(new Date(shoot.date + "T00:00:00"), "PPP") : "Pick a date"}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
-              <Calendar
-                mode="single"
-                selected={shoot.date ? new Date(shoot.date + "T00:00:00") : undefined}
-                onSelect={(d) => update("date", d ? format(d, "yyyy-MM-dd") : null)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+          {/* Native picker on mobile, custom calendar on desktop */}
+          <div className="mt-1 sm:hidden">
+            <input
+              type="date"
+              value={shoot.date ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) { update("date", null); return; }
+                const year = Number(v.split("-")[0]);
+                if (year < 1900 || year > 2200) return;
+                update("date", v);
+              }}
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+            />
+          </div>
+          <div className="hidden sm:block">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className={cn("mt-1 w-full inline-flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-background text-sm text-left", !shoot.date && "text-muted-foreground")}>
+                  <CalendarIcon className="h-4 w-4 opacity-70" />
+                  {shoot.date ? format(new Date(shoot.date + "T00:00:00"), "PPP") : "Pick a date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
+                <Calendar
+                  mode="single"
+                  selected={shoot.date ? new Date(shoot.date + "T00:00:00") : undefined}
+                  onSelect={(d) => update("date", d ? format(d, "yyyy-MM-dd") : null)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         <div>
           <label className="text-xs text-muted-foreground">Time</label>
-          <div className="mt-1 flex items-center gap-2">
+          {/* Native time picker on mobile */}
+          <div className="mt-1 sm:hidden">
+            <input
+              type="time"
+              value={shoot.time ?? ""}
+              onChange={(e) => update("time", e.target.value || null)}
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+            />
+          </div>
+          <div className="mt-1 hidden sm:flex items-center gap-2">
             <Select
               value={shoot.time ? shoot.time.split(":")[0] : ""}
               onValueChange={(h) => {
