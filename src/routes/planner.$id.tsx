@@ -543,7 +543,7 @@ function ClientDetails({ shoot, update }: { shoot: Shoot; update: <K extends key
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="rounded-lg border bg-card shadow-card p-5">
+    <div className="rounded-lg border bg-card shadow-card p-4 sm:p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
         {action}
@@ -571,7 +571,7 @@ function ShootDetails({ shoot, update }: { shoot: Shoot; update: <K extends keyo
 
   return (
     <Card title="Shoot Details">
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 overflow-hidden">
         <div>
           <label className="text-xs text-muted-foreground">Date</label>
           {/* Native picker on mobile, custom calendar on desktop */}
@@ -586,7 +586,8 @@ function ShootDetails({ shoot, update }: { shoot: Shoot; update: <K extends keyo
                 if (year < 1900 || year > 2200) return;
                 update("date", v);
               }}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm max-w-full"
+              style={{ maxWidth: "100%", boxSizing: "border-box" }}
             />
           </div>
           <div className="hidden sm:block">
@@ -617,7 +618,8 @@ function ShootDetails({ shoot, update }: { shoot: Shoot; update: <K extends keyo
               type="time"
               value={shoot.time ?? ""}
               onChange={(e) => update("time", e.target.value || null)}
-              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm max-w-full"
+              style={{ maxWidth: "100%", boxSizing: "border-box" }}
             />
           </div>
           <div className="mt-1 hidden sm:flex items-center gap-2">

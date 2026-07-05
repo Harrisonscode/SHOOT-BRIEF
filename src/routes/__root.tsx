@@ -101,15 +101,6 @@ function RootComponent() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
-
-    // Enable View Transitions API for native-feel page changes
-    // This hooks into TanStack Router's navigation
-    if ("startViewTransition" in document) {
-      const originalPushState = history.pushState.bind(history);
-      history.pushState = (...args) => {
-        (document as any).startViewTransition(() => originalPushState(...args));
-      };
-    }
   }, []);
 
   return (
