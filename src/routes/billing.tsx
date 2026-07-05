@@ -13,11 +13,16 @@ export const Route = createFileRoute("/billing")({
 
 const PRO_FEATURES = [
   "Unlimited shoots",
-  "All 5 shoot templates",
-  "Weather forecast on every shoot",
-  "Gear bag memory",
+  "Client portal with live shoot tracking",
+  "Booking requests & email notifications",
+  "Shoot packages & pricing",
+  "Client reviews on your booking page",
+  "Calendar sync (Google, Apple, Outlook)",
+  "Expense tracking per shoot",
+  "Recurring shoot series",
   "Inspiration board",
-  "Client brief PDF export (coming soon)",
+  "All 5 shoot templates",
+  "PDF shoot brief export",
 ];
 
 function BillingPage() {
