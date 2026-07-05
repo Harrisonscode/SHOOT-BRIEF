@@ -45,14 +45,13 @@ export const Route = createFileRoute("/api/auth/send-email")({
           token,
         } = emailData;
 
-        // The verification URL must point to the Supabase project's auth endpoint
-        // site_url is the Supabase project URL e.g. https://abc123.supabase.co
-        const supabaseUrl = site_url || process.env.VITE_SUPABASE_URL || "";
+        // Always redirect to the app after verification, never to Supabase directly
         const appUrl = "https://shootbrief.app";
-        const finalRedirect = redirect_to || appUrl;
+        const supabaseProjectUrl = process.env.VITE_SUPABASE_URL || "";
+        const finalRedirect = redirect_to && redirect_to.startsWith(appUrl) ? redirect_to : `${appUrl}/dashboard`;
 
         // Construct the correct Supabase verification URL
-        const actionUrl = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(finalRedirect)}`;
+        const actionUrl = `${supabaseProjectUrl}/auth/v1/verify?token=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(finalRedirect)}`;
 
         const displayName =
           user.user_metadata?.display_name ||
