@@ -112,3 +112,147 @@ iframe[src*="lovable.dev/badge"] {
   pointer-events: none !important;
 }
  
+
+/* ─── PWA / Mobile Native Feel ──────────────────────────────────────────────── */
+
+/* Safe area support — content never hides under notch/Dynamic Island/home bar */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+
+html {
+  /* Prevent white bar at bottom on iOS standalone mode */
+  min-height: calc(100% + env(safe-area-inset-top));
+}
+
+/* Prevent text selection on UI elements — feels native */
+button, a, nav, [role="tab"], [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent pinch zoom via touch — belt and braces with the viewport meta tag */
+body {
+  touch-action: pan-x pan-y;
+  overscroll-behavior: none;
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* ─── View Transitions API — page navigation feels native ────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Default cross-fade for all page transitions */
+  ::view-transition-old(root) {
+    animation: 180ms ease-out both vt-fade-out;
+  }
+  ::view-transition-new(root) {
+    animation: 220ms ease-out both vt-fade-in;
+  }
+
+  @keyframes vt-fade-out {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.98); }
+  }
+  @keyframes vt-fade-in {
+    from { opacity: 0; transform: scale(1.01); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+}
+
+/* ─── Micro-animations — native feel for interactions ────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Button press feedback */
+  button:not(:disabled):active {
+    transform: scale(0.96);
+    transition: transform 80ms ease-out;
+  }
+
+  /* Link press */
+  a:active {
+    opacity: 0.7;
+    transition: opacity 80ms;
+  }
+
+  /* Card tap */
+  .shadow-card:active {
+    transform: scale(0.99);
+    transition: transform 100ms ease-out;
+  }
+
+  /* Modal/sheet entrance */
+  [role="dialog"],
+  .modal-enter {
+    animation: modal-slide-up 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes modal-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Bottom sheet / drawer */
+  .drawer-enter {
+    animation: drawer-slide-up 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes drawer-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Smooth tab switch in bottom nav */
+  nav a, nav button {
+    transition: color 150ms ease, opacity 150ms ease;
+  }
+
+  /* Skeleton loading pulse — smoother than default */
+  .animate-pulse {
+    animation: pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Toast entrance */
+  [data-sonner-toaster] [data-sonner-toast] {
+    animation: toast-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+/* ─── Bottom nav safe area — home indicator on iPhone ───────────────────────── */
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Input font size 16px minimum — prevents iOS auto-zoom on focus */
+input, select, textarea {
+  font-size: max(16px, 1rem);
+}
+
+/* On desktop, allow smaller font sizes */
+@media (min-width: 768px) {
+  input, select, textarea {
+    font-size: 0.875rem;
+  }
+}
