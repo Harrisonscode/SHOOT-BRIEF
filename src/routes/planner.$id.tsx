@@ -13,6 +13,33 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateShootBriefPdf, fetchAvatarAsDataUrl } from "@/lib/pdf";
 
+function copyToClipboard(text: string): Promise<void> {
+  // Modern clipboard API (works on most browsers)
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback for mobile Safari and older browsers
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      resolve();
+    } catch {
+      reject(new Error("Copy failed"));
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  });
+}
+
+
+
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
 
@@ -107,7 +134,7 @@ function Planner() {
         } as any)
         .eq("id", shoot.id);
       if (error) toast.error("Save failed: " + error.message);
-      else toast.success("Saved", { duration: 1200 });
+
     }, 800);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [shoot]);
@@ -126,7 +153,7 @@ function Planner() {
       shot_list: t.shots.map((text) => ({ id: newId(), text, tag: "Custom", done: false })),
     });
     setShowTemplate(false);
-    toast.success(`${name} template applied`);
+    
   };
 
   if (notFound) return <div className="text-center py-16"><h2 className="text-xl font-semibold">Shoot not found</h2><button onClick={() => navigate({ to: "/dashboard" })} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md">Back to dashboard</button></div>;
@@ -264,12 +291,12 @@ function Planner() {
   };
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto pb-28">
+    <div className="space-y-5 max-w-3xl mx-auto pb-28 overflow-x-hidden">
       {/* Shoot name */}
       <input
         value={shoot.name}
         onChange={(e) => update("name", e.target.value)}
-        className="w-full text-2xl sm:text-3xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 px-0"
+        className="w-full text-2xl sm:text-3xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 px-0 break-all"
         placeholder="Shoot name"
       />
 
@@ -364,12 +391,12 @@ function ClientDetails({ shoot, update }: { shoot: Shoot; update: <K extends key
   }, [user]);
 
   const portalUrl = shoot.client_token
-    ? `${window.location.origin}/client/${shoot.client_token}`
+    ? `https://shootbrief.app/client/${shoot.client_token}`
     : null;
 
   const copyPortalLink = () => {
     if (!portalUrl) return;
-    navigator.clipboard.writeText(portalUrl).then(() => {
+    copyToClipboard(portalUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -430,7 +457,7 @@ function ClientDetails({ shoot, update }: { shoot: Shoot; update: <K extends key
         )}
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-4 overflow-hidden">
         <div>
           <label className="block text-xs text-muted-foreground mb-1">Client name</label>
           <input
@@ -460,20 +487,44 @@ function ClientDetails({ shoot, update }: { shoot: Shoot; update: <K extends key
             className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
           />
         </div>
-        <div>
+        <div className="min-w-0 overflow-hidden">
           <label className="block text-xs text-muted-foreground mb-1">Final delivery date</label>
-          <input
-            type="date"
-            value={shoot.final_delivery_date ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (!v) { update("final_delivery_date", null); return; }
-              const year = Number(v.split("-")[0]);
-              if (year < 1900 || year > 2200) return; // ignore malformed years (e.g. typo'd extra digit)
-              update("final_delivery_date", v);
-            }}
-            className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
-          />
+          {/* Native picker on mobile */}
+          <div className="mt-1 sm:hidden">
+            <input
+              type="date"
+              value={shoot.final_delivery_date ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) { update("final_delivery_date", null); return; }
+                const year = Number(v.split("-")[0]);
+                if (year < 1900 || year > 2200) return;
+                update("final_delivery_date", v);
+              }}
+              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm max-w-full"
+              style={{ maxWidth: "100%", boxSizing: "border-box" }}
+            />
+          </div>
+          {/* Calendar popover on desktop */}
+          <div className="hidden sm:block">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className={cn("mt-1 w-full inline-flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-background text-sm text-left", !shoot.final_delivery_date && "text-muted-foreground")}>
+                  <CalendarIcon className="h-4 w-4 opacity-70" />
+                  {shoot.final_delivery_date ? format(new Date(shoot.final_delivery_date + "T00:00:00"), "PPP") : "Pick a date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-50 bg-popover" align="start">
+                <Calendar
+                  mode="single"
+                  selected={shoot.final_delivery_date ? new Date(shoot.final_delivery_date + "T00:00:00") : undefined}
+                  onSelect={(d) => update("final_delivery_date", d ? format(d, "yyyy-MM-dd") : null)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         <div>
           <label className="block text-xs text-muted-foreground mb-1">Contract status</label>
@@ -826,7 +877,7 @@ function ShotList({ value, onChange }: { value: Shot[]; onChange: (v: Shot[]) =>
       ) : (
         <ul className="space-y-2">
           {value.map((s) => (
-            <li key={s.id} className="flex items-center gap-2">
+            <li key={s.id} className="flex items-center gap-2 min-w-0">
               <button onClick={() => update(s.id, { done: !s.done })} className={`h-5 w-5 shrink-0 rounded border flex items-center justify-center ${s.done ? "bg-primary border-primary text-primary-foreground" : "bg-background"}`}>
                 {s.done && <Check className="h-3.5 w-3.5" />}
               </button>
@@ -870,7 +921,7 @@ function GearChecklist({ value, onChange, isPro }: { value: string[]; onChange: 
         ))}
       </div>
       <div className="flex gap-2">
-        <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Add custom gear…" className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustom())} />
+        <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Custom gear…" className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustom())} />
         <button onClick={addCustom} className="px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">Add</button>
       </div>
     </Card>
@@ -911,7 +962,7 @@ function ExpensesCard({ shootId }: { shootId: string }) {
     if (error) { toast.error(error.message); return; }
     setExpenses((prev) => [data as any, ...(prev ?? [])]);
     setDesc(""); setAmount(""); setCategory("Other"); setShowAdd(false);
-    toast.success("Expense added");
+    
   };
 
   const remove = async (id: string) => {
@@ -933,9 +984,9 @@ function ExpensesCard({ shootId }: { shootId: string }) {
       {showAdd && (
         <div className="mb-4 rounded-lg border bg-muted/30 p-3 space-y-2">
           <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="e.g. Train tickets" className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" />
-          <div className="flex gap-2">
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={0} step={0.01} placeholder="Amount (£)" className="flex-1 px-3 py-2 rounded-md border border-input bg-background text-sm" />
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="px-3 py-2 rounded-md border border-input bg-background text-sm">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min={0} step={0.01} placeholder="Amount (£)" className="flex-1 w-full px-3 py-2 rounded-md border border-input bg-background text-sm" />
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full sm:w-auto px-3 py-2 rounded-md border border-input bg-background text-sm">
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
