@@ -148,43 +148,29 @@ button, a, input, select, textarea {
 
 /* ─── View Transitions API — page navigation feels native ────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
-  /* Default cross-fade for all page transitions */
-  ::view-transition-old(root) {
-    animation: 180ms ease-out both vt-fade-out;
-  }
+  /* Disable page-level transitions - they cause black flash on mobile.
+     Individual component animations (modals, drawers) are handled below. */
+  ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation: 220ms ease-out both vt-fade-in;
-  }
-
-  @keyframes vt-fade-out {
-    from { opacity: 1; transform: scale(1); }
-    to   { opacity: 0; transform: scale(0.98); }
-  }
-  @keyframes vt-fade-in {
-    from { opacity: 0; transform: scale(1.01); }
-    to   { opacity: 1; transform: scale(1); }
+    animation: none;
+    mix-blend-mode: normal;
   }
 }
 
 /* ─── Micro-animations — native feel for interactions ────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
 
-  /* Button press feedback */
+  /* Button press — subtle, not jarring */
   button:not(:disabled):active {
-    transform: scale(0.96);
-    transition: transform 80ms ease-out;
+    opacity: 0.75;
+    transition: opacity 60ms ease-out;
   }
 
-  /* Link press */
-  a:active {
-    opacity: 0.7;
-    transition: opacity 80ms;
-  }
-
-  /* Card tap */
-  .shadow-card:active {
-    transform: scale(0.99);
-    transition: transform 100ms ease-out;
+  /* Card tap — very subtle */
+  a .shadow-card:active,
+  button .shadow-card:active {
+    opacity: 0.85;
+    transition: opacity 60ms ease-out;
   }
 
   /* Modal/sheet entrance */
