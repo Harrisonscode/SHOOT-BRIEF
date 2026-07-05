@@ -46,7 +46,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Shoot Brief — Plan better shoots. Miss nothing." },
       { name: "description", content: "Visual shoot planner for photographers. Golden hour, weather, shot lists and templates." },
       { property: "og:title", content: "Shoot Brief — Plan better shoots. Miss nothing." },
@@ -55,10 +55,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Shoot Brief — Plan better shoots. Miss nothing." },
       { name: "twitter:description", content: "Visual shoot planner for photographers. Golden hour, weather, shot lists and templates." },
+      // PWA
+      { name: "theme-color", content: "#4f8a1f" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Shoot Brief" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "Shoot Brief" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+      { rel: "apple-touch-icon", sizes: "152x152", href: "/icons/icon-152.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/icons/icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
@@ -84,6 +95,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Register service worker for PWA
+  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    });
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
