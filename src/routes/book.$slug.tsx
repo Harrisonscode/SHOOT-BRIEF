@@ -223,7 +223,7 @@ function BookingPage() {
                 value={form.client_name}
                 onChange={(e) => set("client_name", e.target.value)}
                 placeholder="Sarah Johnson"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
               />
             </div>
             <div>
@@ -233,7 +233,7 @@ function BookingPage() {
                 value={form.client_email}
                 onChange={(e) => set("client_email", e.target.value)}
                 placeholder="sarah@example.com"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
               />
             </div>
           </div>
@@ -246,7 +246,7 @@ function BookingPage() {
               value={form.client_phone}
               onChange={(e) => set("client_phone", e.target.value)}
               placeholder="+44 7700 000000"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
             />
           </div>
 
@@ -279,7 +279,7 @@ function BookingPage() {
                 value={form.preferred_date}
                 onChange={(e) => set("preferred_date", e.target.value)}
                 min={new Date().toISOString().slice(0, 10)}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
               />
             </div>
             <div>
@@ -288,7 +288,7 @@ function BookingPage() {
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
                 placeholder="Manchester city centre"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
               />
             </div>
           </div>
@@ -300,7 +300,7 @@ function BookingPage() {
               value={form.budget}
               onChange={(e) => set("budget", e.target.value)}
               placeholder="e.g. £500–£800"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
             />
           </div>
 
@@ -345,7 +345,7 @@ function BookingPage() {
               onChange={(e) => set("message", e.target.value)}
               placeholder="Any details about what you have in mind, style references, number of people, etc."
               rows={4}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f] resize-none"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f] resize-none"
             />
           </div>
 
