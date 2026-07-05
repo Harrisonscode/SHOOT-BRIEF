@@ -6,7 +6,7 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
@@ -46,7 +46,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { title: "Shoot Brief — Plan better shoots. Miss nothing." },
       { name: "description", content: "Visual shoot planner for photographers. Golden hour, weather, shot lists and templates." },
       { property: "og:title", content: "Shoot Brief — Plan better shoots. Miss nothing." },
@@ -97,11 +97,20 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   // Register service worker for PWA
-  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
-    });
-  }
+    }
+
+    // Enable View Transitions API for native-feel page changes
+    // This hooks into TanStack Router's navigation
+    if ("startViewTransition" in document) {
+      const originalPushState = history.pushState.bind(history);
+      history.pushState = (...args) => {
+        (document as any).startViewTransition(() => originalPushState(...args));
+      };
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
