@@ -1,19 +1,17 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, Menu, X, Inbox, Package, Star } from "lucide-react";
+import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, X, Inbox, Package, Star, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo, ApertureIcon } from "./Logo";
 import { toast } from "sonner";
 
-// Primary nav shown in sidebar + bottom tab bar
 const PRIMARY_NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/planner", label: "New Shoot", icon: Plus },
+  { to: "/dashboard", label: "Home", icon: LayoutDashboard },
+  { to: "/planner", label: "New", icon: Plus },
   { to: "/calendar", label: "Calendar", icon: Calendar },
   { to: "/bookings", label: "Bookings", icon: Inbox },
 ];
 
-// Secondary nav shown only in sidebar + hamburger menu
 const SECONDARY_NAV = [
   { to: "/inspiration", label: "Inspiration", icon: ImageIcon },
   { to: "/packages", label: "Packages", icon: Package },
@@ -42,6 +40,24 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   useEffect(() => {
     if (title) document.title = `${title} — Shoot Brief`;
   }, [title]);
+
+  // Prevent pinch zoom via JS (belt-and-braces with viewport meta)
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    const preventGesture = (e: Event) => e.preventDefault();
+
+    document.addEventListener("touchmove", preventZoom, { passive: false });
+    document.addEventListener("gesturestart", preventGesture, { passive: false });
+    document.addEventListener("gesturechange", preventGesture, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", preventZoom);
+      document.removeEventListener("gesturestart", preventGesture);
+      document.removeEventListener("gesturechange", preventGesture);
+    };
+  }, []);
 
   if (loading || !user) {
     return (
@@ -100,21 +116,27 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       {/* Desktop sidebar */}
       <aside className="hidden md:block w-60 shrink-0 fixed inset-y-0 left-0">{SidebarContent}</aside>
 
-      {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between bg-background border-b px-3 py-2">
+      {/* Mobile top bar — respects Dynamic Island / notch via safe-area-inset-top */}
+      <div
+        className="md:hidden fixed inset-x-0 z-40 bg-background/95 backdrop-blur border-b flex items-center justify-center"
+        style={{
+          top: 0,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          height: 'calc(44px + env(safe-area-inset-top, 0px))',
+        }}
+      >
         <Logo iconClassName="h-5 w-5" textClassName="text-sm" />
-        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-md hover:bg-muted" aria-label="More">
-          <Menu className="h-5 w-5" />
-        </button>
       </div>
 
-      {/* Mobile slide-out drawer (secondary nav + signout) */}
+      {/* Mobile slide-out drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 right-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col">
+          <div className="absolute inset-y-0 right-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col drawer-enter"
+            style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          >
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-              <span className="font-semibold text-white">Menu</span>
+              <span className="font-semibold text-white">More</span>
               <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded hover:bg-white/10 text-white/70">
                 <X className="h-5 w-5" />
               </button>
@@ -151,12 +173,18 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       )}
 
       {/* Main content */}
-      <main className="flex-1 md:ml-60 pt-14 md:pt-0 pb-20 md:pb-0">
+      <main
+        className="flex-1 md:ml-60 md:pt-0 pb-20 md:pb-0"
+        style={{ paddingTop: 'calc(44px + env(safe-area-inset-top, 0px))' }}
+      >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10 py-6 md:py-8">{children}</div>
       </main>
 
-      {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background border-t flex items-stretch">
+      {/* Mobile bottom tab bar — sits above iPhone home indicator */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t flex items-stretch mobile-bottom-nav"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         {PRIMARY_NAV.map((item) => {
           const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
           const Icon = item.icon;
@@ -165,16 +193,12 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             <Link
               key={item.to}
               to={item.to}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${
-                isNew
-                  ? "text-primary"
-                  : active
-                  ? "text-primary"
-                  : "text-muted-foreground"
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                active ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {isNew ? (
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mb-0.5">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mb-0.5 shadow-lg">
                   <Icon className="h-4 w-4 text-primary-foreground" />
                 </div>
               ) : (
@@ -184,13 +208,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             </Link>
           );
         })}
-        {/* More button */}
+        {/* More — icon only, no label to avoid home indicator overlap */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium text-muted-foreground"
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium text-muted-foreground"
+          aria-label="More options"
         >
-          <Menu className="h-5 w-5" />
-          More
+          <MoreHorizontal className="h-5 w-5" />
+          <span>More</span>
         </button>
       </nav>
     </div>
