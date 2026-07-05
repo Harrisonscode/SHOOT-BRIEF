@@ -181,14 +181,7 @@ function BookingPage() {
   return (
     <div className="min-h-screen bg-[#f8faf7]">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button
-          onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = "/"}
-          className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 flex items-center gap-1 text-sm"
-          aria-label="Go back"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
+      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-2">
         <span style={{ color: "#4f8a1f" }}><ApertureIcon className="h-5 w-5" color="#4f8a1f" /></span>
         <span className="text-sm font-semibold text-gray-700">Shoot Brief</span>
       </div>
