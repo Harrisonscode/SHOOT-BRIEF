@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import {
   Upload, Trash2, Lock, Link2, ExternalLink,
-  FolderPlus, Loader2, X, ArrowLeft, Images, Pencil
+  FolderPlus, Loader2, X, ArrowLeft, Images, Pencil, CheckSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
@@ -52,6 +52,8 @@ function InspirationPage() {
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [renamingGallery, setRenamingGallery] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
   const isPro = !!profile?.is_pro;
 
@@ -203,6 +205,38 @@ function InspirationPage() {
     toast.success("Deleted");
   };
 
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} image${selected.size !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    const toDelete = images?.filter((i) => selected.has(i.id)) ?? [];
+    const storagePaths = toDelete.filter((i) => i.source_type !== "url").map((i) => i.image_url);
+    if (storagePaths.length > 0) {
+      await supabase.storage.from("inspiration").remove(storagePaths).catch(() => {});
+    }
+    await supabase.from("inspiration_images").delete().in("id", Array.from(selected));
+    setImages((imgs) => imgs?.filter((i) => !selected.has(i.id)) ?? null);
+    setSelected(new Set());
+    setSelectMode(false);
+    toast.success(`${toDelete.length} image${toDelete.length !== 1 ? "s" : ""} deleted`);
+  };
+
+  const assignSelectedToGallery = async (galleryName: string | null) => {
+    if (selected.size === 0) return;
+    await supabase.from("inspiration_images").update({ gallery: galleryName } as any).in("id", Array.from(selected));
+    setImages((imgs) => imgs?.map((i) => selected.has(i.id) ? { ...i, gallery: galleryName } : i) ?? null);
+    setSelected(new Set());
+    setSelectMode(false);
+    toast.success(galleryName ? `Moved to "${galleryName}"` : "Removed from gallery");
+  };
+
   if (!isPro) return (
     <div className="rounded-lg border bg-card shadow-card p-10 text-center">
       <Lock className="h-10 w-10 mx-auto text-muted-foreground" />
@@ -224,8 +258,8 @@ function InspirationPage() {
     return (
       <div>
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <button onClick={() => setActiveGallery(null)} className="p-1.5 rounded-md hover:bg-muted">
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <button onClick={() => { setActiveGallery(null); setSelectMode(false); setSelected(new Set()); }} className="p-1.5 rounded-md hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </button>
           {renamingGallery === activeGallery ? (
@@ -243,20 +277,75 @@ function InspirationPage() {
             <Pencil className="h-4 w-4" />
           </button>
           <span className="text-sm text-muted-foreground">{galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}</span>
-          <div className="ml-auto flex items-center gap-2">
-            <button onClick={() => setShowUrlModal(true)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
-              <Link2 className="h-4 w-4" /> Add URL
-            </button>
-            <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
-            <button onClick={() => fileRef.current?.click()} disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {busy ? "Uploading…" : "Upload"}
-            </button>
-            <button onClick={() => deleteGallery(activeGallery)} className="p-2 rounded-md border hover:bg-destructive/10 text-destructive border-destructive/30">
-              <Trash2 className="h-4 w-4" />
-            </button>
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            {!selectMode ? (
+              <>
+                {galleryImages.length > 0 && (
+                  <button onClick={() => setSelectMode(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
+                    <CheckSquare className="h-4 w-4" /> Select
+                  </button>
+                )}
+                <button onClick={() => setShowUrlModal(true)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
+                  <Link2 className="h-4 w-4" /> Add URL
+                </button>
+                <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
+                <button onClick={() => fileRef.current?.click()} disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {busy ? "Uploading…" : "Upload"}
+                </button>
+                <button onClick={() => deleteGallery(activeGallery)} className="p-2 rounded-md border hover:bg-destructive/10 text-destructive border-destructive/30">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm text-muted-foreground">{selected.size} selected</span>
+                {/* Move to gallery dropdown */}
+                {galleries.length > 0 && selected.size > 0 && (
+                  <select
+                    onChange={(e) => { if (e.target.value) assignSelectedToGallery(e.target.value === "_none" ? null : e.target.value); e.target.value = ""; }}
+                    className="px-3 py-2 rounded-md border bg-background text-sm"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Move to…</option>
+                    <option value="_none">Remove from gallery</option>
+                    {galleries.filter((g) => g.name !== activeGallery).map((g) => (
+                      <option key={g.name} value={g.name}>{g.name}</option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  onClick={deleteSelected}
+                  disabled={selected.size === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 text-sm disabled:opacity-40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </button>
+                <button onClick={() => { setSelectMode(false); setSelected(new Set()); }} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
+                  <X className="h-3.5 w-3.5" /> Cancel
+                </button>
+              </>
+            )}
           </div>
         </div>
+
+        {/* Select all bar */}
+        {selectMode && galleryImages.length > 0 && (
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <button
+              onClick={() => {
+                if (selected.size === galleryImages.length) {
+                  setSelected(new Set());
+                } else {
+                  setSelected(new Set(galleryImages.map((i) => i.id)));
+                }
+              }}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              {selected.size === galleryImages.length ? "Deselect all" : "Select all"}
+            </button>
+          </div>
+        )}
 
         {galleryImages.length === 0 ? (
           <div className="rounded-lg border bg-card shadow-card py-16 text-center">
@@ -274,6 +363,9 @@ function InspirationPage() {
                 galleries={galleries.map((g) => g.name)}
                 onUpdate={updateImage}
                 onRemove={removeImage}
+                selectMode={selectMode}
+                selected={selected.has(img.id)}
+                onToggleSelect={toggleSelect}
               />
             ))}
           </div>
@@ -457,47 +549,65 @@ function InspirationPage() {
 }
 
 // ─── Image card ───────────────────────────────────────────────────────────────
-function ImageCard({ img, shoots, galleries, onUpdate, onRemove }: {
+function ImageCard({ img, shoots, galleries, onUpdate, onRemove, selectMode, selected, onToggleSelect }: {
   img: Img;
   shoots: ShootOpt[];
   galleries: string[];
   onUpdate: (id: string, patch: Partial<Img>) => void;
   onRemove: (id: string, path: string, srcType: string) => void;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
   return (
-    <div className="break-inside-avoid rounded-lg border bg-card shadow-card overflow-hidden group relative">
+    <div
+      className={`break-inside-avoid rounded-lg border bg-card shadow-card overflow-hidden group relative transition-all ${selectMode ? "cursor-pointer" : ""} ${selected ? "ring-2 ring-primary border-primary/40" : ""}`}
+      onClick={selectMode ? () => onToggleSelect?.(img.id) : undefined}
+    >
+      {/* Selection checkbox */}
+      {selectMode && (
+        <div className="absolute top-2 left-2 z-10">
+          <div className={`h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors ${selected ? "bg-primary border-primary" : "bg-white/80 border-gray-300"}`}>
+            {selected && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+        </div>
+      )}
       {img.signedUrl ? (
         <img src={img.signedUrl} alt={img.note ?? ""} className="w-full h-auto block" loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
       ) : (
         <div className="w-full h-36 bg-muted flex items-center justify-center text-xs text-muted-foreground">Image unavailable</div>
       )}
-      <div className="p-3 space-y-2">
-        <input
-          value={img.note ?? ""}
-          onChange={(e) => onUpdate(img.id, { note: e.target.value || null })}
-          placeholder="Add a note…"
-          className="w-full text-sm bg-transparent focus:outline-none placeholder:text-muted-foreground/60"
-        />
-        <div className="flex gap-2">
-          <select value={img.gallery ?? ""} onChange={(e) => onUpdate(img.id, { gallery: e.target.value || null })} className="flex-1 text-xs px-2 py-1 rounded border bg-background">
-            <option value="">No gallery</option>
-            {galleries.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
-          <select value={img.shoot_id ?? ""} onChange={(e) => onUpdate(img.id, { shoot_id: e.target.value || null })} className="flex-1 text-xs px-2 py-1 rounded border bg-background">
-            <option value="">No shoot</option>
-            {shoots.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+      {!selectMode && (
+        <div className="p-3 space-y-2">
+          <input
+            value={img.note ?? ""}
+            onChange={(e) => onUpdate(img.id, { note: e.target.value || null })}
+            placeholder="Add a note…"
+            className="w-full text-sm bg-transparent focus:outline-none placeholder:text-muted-foreground/60"
+          />
+          <div className="flex gap-2">
+            <select value={img.gallery ?? ""} onChange={(e) => onUpdate(img.id, { gallery: e.target.value || null })} className="flex-1 text-xs px-2 py-1 rounded border bg-background">
+              <option value="">No gallery</option>
+              {galleries.map((g) => <option key={g} value={g}>{g}</option>)}
+            </select>
+            <select value={img.shoot_id ?? ""} onChange={(e) => onUpdate(img.id, { shoot_id: e.target.value || null })} className="flex-1 text-xs px-2 py-1 rounded border bg-background">
+              <option value="">No shoot</option>
+              {shoots.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
         </div>
-      </div>
-      {img.source_type === "url" && (
+      )}
+      {!selectMode && img.source_type === "url" && (
         <a href={img.image_url} target="_blank" rel="noreferrer" className="absolute top-2 left-2 p-1.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-black/80 transition-opacity">
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
       )}
-      <button onClick={() => onRemove(img.id, img.image_url, img.source_type)} className="absolute top-2 right-2 p-1.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-destructive transition-opacity">
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      {!selectMode && (
+        <button onClick={() => onRemove(img.id, img.image_url, img.source_type)} className="absolute top-2 right-2 p-1.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-destructive transition-opacity">
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }
