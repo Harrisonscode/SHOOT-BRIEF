@@ -152,32 +152,48 @@ function InspirationPage() {
   };
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (file.size > MAX_BYTES) { toast.error("File too large — maximum 50 MB"); if (fileRef.current) fileRef.current.value = ""; return; }
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !user) return;
+
+    // Validate all files first
+    const oversized = files.filter((f) => f.size > MAX_BYTES);
+    if (oversized.length > 0) {
+      toast.error(`${oversized.length} file${oversized.length !== 1 ? "s" : ""} too large (max 50 MB each) — skipped`);
+    }
+    const validFiles = files.filter((f) => f.size <= MAX_BYTES);
+    if (!validFiles.length) { if (fileRef.current) fileRef.current.value = ""; return; }
+
     setBusy(true);
-    const safeName = file.name.replace(/[^a-z0-9._-]/gi, "_");
-    const path = `${user.id}/${Date.now()}-${safeName}`;
-    const { error: upErr } = await supabase.storage.from("inspiration").upload(path, file);
-    if (upErr) { setBusy(false); toast.error("Upload failed: " + upErr.message); return; }
-    const { data: inserted, error: insErr } = await supabase
-      .from("inspiration_images")
-      .insert({ user_id: user.id, image_url: path, source_type: "upload", gallery: activeGallery } as any)
-      .select("id, image_url, note, shoot_id, source_type, gallery, created_at")
-      .single();
+
+    const uploaded: Img[] = [];
+    for (const file of validFiles) {
+      const safeName = file.name.replace(/[^a-z0-9._-]/gi, "_");
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+      const { error: upErr } = await supabase.storage.from("inspiration").upload(path, file);
+      if (upErr) { toast.error(`Failed to upload ${file.name}`); continue; }
+      const { data: inserted, error: insErr } = await supabase
+        .from("inspiration_images")
+        .insert({ user_id: user.id, image_url: path, source_type: "upload", gallery: activeGallery } as any)
+        .select("id, image_url, note, shoot_id, source_type, gallery, created_at")
+        .single();
+      if (insErr) { await supabase.storage.from("inspiration").remove([path]); continue; }
+      const newImg: Img = { ...inserted as any, source_type: "upload", gallery: activeGallery };
+      await resolveUrl(newImg);
+      uploaded.push(newImg);
+    }
+
     setBusy(false);
     if (fileRef.current) fileRef.current.value = "";
-    if (insErr) { toast.error("Save failed: " + insErr.message); await supabase.storage.from("inspiration").remove([path]); return; }
-    const newImg: Img = { ...inserted as any, source_type: "upload", gallery: activeGallery };
-    await resolveUrl(newImg);
-    setImages((prev) => prev ? [newImg, ...prev] : [newImg]);
+    if (!uploaded.length) return;
+
+    setImages((prev) => prev ? [...uploaded, ...prev] : uploaded);
     if (activeGallery) {
       setGalleries((prev) => prev.map((g) => g.name === activeGallery
-        ? { ...g, count: g.count + 1, coverUrl: g.coverUrl ?? newImg.signedUrl }
+        ? { ...g, count: g.count + uploaded.length, coverUrl: g.coverUrl ?? uploaded[0]?.signedUrl }
         : g
       ));
     }
-    toast.success("Image added");
+    if (uploaded.length > 1) toast.success(`${uploaded.length} images added`);
   };
 
   const updateImage = async (id: string, patch: Partial<Img>) => {
@@ -288,7 +304,7 @@ function InspirationPage() {
                 <button onClick={() => setShowUrlModal(true)} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
                   <Link2 className="h-4 w-4" /> Add URL
                 </button>
-                <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
+                <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" multiple className="hidden" onChange={onUpload} />
                 <button onClick={() => fileRef.current?.click()} disabled={busy} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                   {busy ? "Uploading…" : "Upload"}
@@ -460,7 +476,7 @@ function InspirationPage() {
                   <button onClick={() => setShowUrlModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border bg-background hover:bg-muted text-xs">
                     <Link2 className="h-3.5 w-3.5" /> Add URL
                   </button>
-                  <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
+                  <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" multiple className="hidden" onChange={onUpload} />
                   <button onClick={() => fileRef.current?.click()} disabled={busy} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border bg-background hover:bg-muted text-xs disabled:opacity-60">
                     {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                     Upload
@@ -493,7 +509,7 @@ function InspirationPage() {
                 <button onClick={() => setShowGalleryModal(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
                   <FolderPlus className="h-4 w-4" /> New gallery
                 </button>
-                <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
+                <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" multiple className="hidden" onChange={onUpload} />
                 <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 px-4 py-2 rounded-md border bg-background hover:bg-muted text-sm">
                   <Upload className="h-4 w-4" /> Upload image
                 </button>
@@ -504,7 +520,7 @@ function InspirationPage() {
           {/* Upload to ungrouped if galleries exist but no ungrouped yet */}
           {galleries.length > 0 && ungroupedCount === 0 && (
             <div className="mt-4 flex gap-2">
-              <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" className="hidden" onChange={onUpload} />
+              <input ref={fileRef} type="file" accept="image/*,.heic,.heif,.tiff,.tif" multiple className="hidden" onChange={onUpload} />
               <button onClick={() => fileRef.current?.click()} disabled={busy} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 Upload image (ungrouped)
