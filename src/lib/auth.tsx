@@ -20,6 +20,7 @@ export type Profile = {
   calendar_token: string | null;
   brand_color: string | null;
   logo_url: string | null;
+  font_family: string | null;
   business_address: string | null;
   business_city: string | null;
   vat_number: string | null;
