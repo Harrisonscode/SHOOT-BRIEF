@@ -32,9 +32,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       .from("profiles")
       .select("stripe_customer_id, email")
       .eq("id", userId)
-      .maybeSingle();
+      .maybeSingle() as any;
 
-    let customerId = profile?.stripe_customer_id ?? null;
+    let customerId = (profile as any)?.stripe_customer_id ?? null;
     if (!customerId && email) {
       const existing = await stripe.customers.list({ email, limit: 1 });
       if (existing.data.length > 0) customerId = existing.data[0].id;
@@ -68,9 +68,9 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
       .from("profiles")
       .select("stripe_customer_id")
       .eq("id", userId)
-      .maybeSingle();
+      .maybeSingle() as any;
 
-    let customerId = profile?.stripe_customer_id ?? null;
+    let customerId = (profile as any)?.stripe_customer_id ?? null;
     if (!customerId && email) {
       const existing = await stripe.customers.list({ email, limit: 1 });
       if (existing.data.length > 0) customerId = existing.data[0].id;
