@@ -26,6 +26,15 @@ function SettingsPage() {
   const [showDelete, setShowDelete] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [brandColor, setBrandColor] = useState("#4f8a1f");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [businessCity, setBusinessCity] = useState("");
+  const [vatNumber, setVatNumber] = useState("");
+  const [invoiceNotes, setInvoiceNotes] = useState("");
+  const [contractTemplate, setContractTemplate] = useState("");
+  const logoRef = useRef<HTMLInputElement>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -36,6 +45,13 @@ function SettingsPage() {
       setDarkMode(profile.dark_mode);
       setDefaultType(profile.default_shoot_type ?? "");
       if (profile.avatar_url) resolveAvatarUrl(profile.avatar_url);
+      setBrandColor(profile.brand_color ?? "#4f8a1f");
+      setBusinessAddress(profile.business_address ?? "");
+      setBusinessCity(profile.business_city ?? "");
+      setVatNumber(profile.vat_number ?? "");
+      setInvoiceNotes(profile.invoice_notes ?? "");
+      setContractTemplate(profile.contract_template ?? "");
+      if (profile.logo_url) resolveLogo(profile.logo_url);
     }
   }, [profile]);
 
@@ -43,6 +59,26 @@ function SettingsPage() {
     if (path.startsWith("http")) { setAvatarUrl(path); return; }
     const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
     setAvatarUrl(data?.signedUrl ?? null);
+  };
+
+  const resolveLogo = async (path: string) => {
+    if (path.startsWith("http")) { setLogoUrl(path); return; }
+    const { data } = await supabase.storage.from("logos").createSignedUrl(path, 3600);
+    setLogoUrl(data?.signedUrl ?? null);
+  };
+
+  const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setLogoUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/logo.${ext}`;
+    await supabase.storage.from("logos").upload(path, file, { upsert: true });
+    await supabase.from("profiles").update({ logo_url: path } as any).eq("id", user.id);
+    setLogoUploading(false);
+    resolveLogo(path);
+    refreshProfile();
+    if (logoRef.current) logoRef.current.value = "";
   };
 
   const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +109,13 @@ function SettingsPage() {
       business_name: businessName || null,
       phone: phone || null,
       website: website || null,
-    }).eq("id", user.id);
+      brand_color: brandColor || null,
+      business_address: businessAddress || null,
+      business_city: businessCity || null,
+      vat_number: vatNumber || null,
+      invoice_notes: invoiceNotes || null,
+      contract_template: contractTemplate || null,
+    } as any).eq("id", user.id);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
     refreshProfile();
@@ -174,6 +216,75 @@ function SettingsPage() {
           <button onClick={saveProfile} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">Save profile</button>
           <button onClick={resetPassword} className="px-4 py-2 rounded-md border bg-background hover:bg-muted text-sm font-medium">Change password</button>
         </div>
+      </section>
+
+      {/* Branding */}
+      <section className="rounded-lg border bg-card shadow-card p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold">Branding</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Your logo, colours and business details appear on client portals, booking pages, contracts and invoices.</p>
+        </div>
+
+        {/* Logo */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1.5">Business logo</label>
+          <div className="flex items-center gap-4">
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="h-14 w-auto max-w-[140px] object-contain rounded border bg-white p-1" />
+            ) : (
+              <div className="h-14 w-32 rounded border bg-muted flex items-center justify-center text-xs text-muted-foreground">No logo</div>
+            )}
+            <div>
+              <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
+              <button onClick={() => logoRef.current?.click()} disabled={logoUploading} className="px-3 py-1.5 rounded-md border bg-background hover:bg-muted text-sm disabled:opacity-60">
+                {logoUploading ? "Uploading…" : "Upload logo"}
+              </button>
+              <div className="text-xs text-muted-foreground mt-1">PNG or SVG recommended. Max 2MB.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Brand colour */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1.5">Brand colour</label>
+          <div className="flex items-center gap-3">
+            <input type="color" value={brandColor} onChange={(e) => setBrandColor(e.target.value)} className="h-10 w-16 rounded-md border cursor-pointer bg-background p-0.5" />
+            <input value={brandColor} onChange={(e) => setBrandColor(e.target.value)} placeholder="#4f8a1f" className="w-28 px-3 py-2 rounded-md border border-input bg-background text-sm font-mono" />
+            <div className="text-xs text-muted-foreground">Used on client portal, booking page, contracts and invoices</div>
+          </div>
+        </div>
+
+        {/* Business address */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">Business address</label>
+            <input value={businessAddress} onChange={(e) => setBusinessAddress(e.target.value)} placeholder="123 High Street" className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1">City</label>
+            <input value={businessCity} onChange={(e) => setBusinessCity(e.target.value)} placeholder="London" className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" />
+          </div>
+        </div>
+
+        {/* VAT number */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">VAT number <span className="text-muted-foreground/60">(optional)</span></label>
+          <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="GB123456789" className="w-full sm:w-64 px-3 py-2 rounded-md border border-input bg-background text-sm font-mono" />
+        </div>
+
+        {/* Default invoice notes */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Default invoice notes</label>
+          <textarea value={invoiceNotes} onChange={(e) => setInvoiceNotes(e.target.value)} rows={2} placeholder="e.g. Payment due within 14 days. Bank transfer preferred." className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none" />
+        </div>
+
+        {/* Default contract template */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Default contract template</label>
+          <textarea value={contractTemplate} onChange={(e) => setContractTemplate(e.target.value)} rows={6} placeholder="Write your standard contract terms here. This will pre-fill whenever you create a new contract." className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm font-mono resize-y" />
+        </div>
+
+        <button onClick={saveProfile} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">Save branding</button>
       </section>
 
       {/* Preferences */}
