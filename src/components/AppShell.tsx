@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, X, Inbox, Package, Star, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, Plus, Calendar, Image as ImageIcon, CreditCard, Settings, LogOut, X, Inbox, Package, Star, MoreHorizontal, FileText, Receipt } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo, ApertureIcon } from "./Logo";
 import { toast } from "sonner";
@@ -13,6 +13,8 @@ const PRIMARY_NAV = [
 ];
 
 const SECONDARY_NAV = [
+  { to: "/contracts", label: "Contracts", icon: FileText },
+  { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/inspiration", label: "Inspiration", icon: ImageIcon },
   { to: "/packages", label: "Packages", icon: Package },
   { to: "/reviews", label: "Reviews", icon: Star },
