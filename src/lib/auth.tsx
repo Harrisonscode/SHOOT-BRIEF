@@ -18,6 +18,13 @@ export type Profile = {
   booking_active: boolean;
   booking_intro: string | null;
   calendar_token: string | null;
+  brand_color: string | null;
+  logo_url: string | null;
+  business_address: string | null;
+  business_city: string | null;
+  vat_number: string | null;
+  invoice_notes: string | null;
+  contract_template: string | null;
 };
 
 type AuthCtx = {
