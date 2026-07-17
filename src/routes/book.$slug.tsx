@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ApertureIcon } from "@/components/Logo";
+import { buildBrand, BrandStyle, BrandLogo, DEFAULT_BRAND } from "@/lib/brand";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
 
@@ -74,11 +75,17 @@ function BookingPage() {
     (async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, business_name, email, website, booking_intro, booking_active")
+        .select("id, display_name, business_name, email, website, booking_intro, booking_active, brand_color, logo_url, font_family, is_pro")
         .eq("booking_slug", slug)
         .maybeSingle();
       if (error || !data) { setNotFound(true); return; }
       setPhotographer(data as any);
+
+      // Resolve logo URL if set
+      if ((data as any).logo_url && !(data as any).logo_url.startsWith("http")) {
+        const { data: signed } = await supabase.storage.from("logos").createSignedUrl((data as any).logo_url, 3600);
+        if (signed?.signedUrl) setPhotographer((p: any) => ({ ...p, _resolvedLogoUrl: signed.signedUrl }));
+      }
 
       // Load active packages
       const { data: pkgs } = await supabase
@@ -152,7 +159,7 @@ function BookingPage() {
 
   if (!photographer) return (
     <div className="min-h-screen bg-[#f8faf7] flex items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#4f8a1f] border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 brand-border border-t-transparent" />
     </div>
   );
 
@@ -178,8 +185,11 @@ function BookingPage() {
     </div>
   );
 
+  const brand = buildBrand(photographer, photographer?._resolvedLogoUrl ?? null);
+
   return (
-    <div className="min-h-screen bg-[#f8faf7]">
+    <div className="min-h-screen bg-[#f8faf7]" style={{ fontFamily: brand.fontFamily }}>
+      <BrandStyle brand={brand} />
       {/* Fixed top bar that respects iOS safe area */}
       <div
         className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100 flex items-center gap-3 px-4"
@@ -197,8 +207,7 @@ function BookingPage() {
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span style={{ color: "#4f8a1f", marginTop: 'env(safe-area-inset-top, 0px)' }}><ApertureIcon className="h-5 w-5" color="#4f8a1f" /></span>
-        <span className="text-sm font-semibold text-gray-700" style={{ marginTop: 'env(safe-area-inset-top, 0px)' }}>Shoot Brief</span>
+        <BrandLogo brand={brand} className="h-6 w-auto max-w-[120px]" />
       </div>
       {/* Offset content below fixed bar */}
       <div style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
@@ -223,7 +232,7 @@ function BookingPage() {
                 value={form.client_name}
                 onChange={(e) => set("client_name", e.target.value)}
                 placeholder="Sarah Johnson"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
               />
             </div>
             <div>
@@ -233,7 +242,7 @@ function BookingPage() {
                 value={form.client_email}
                 onChange={(e) => set("client_email", e.target.value)}
                 placeholder="sarah@example.com"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
               />
             </div>
           </div>
@@ -246,7 +255,7 @@ function BookingPage() {
               value={form.client_phone}
               onChange={(e) => set("client_phone", e.target.value)}
               placeholder="+44 7700 000000"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
             />
           </div>
 
@@ -260,8 +269,8 @@ function BookingPage() {
                   onClick={() => set("shoot_type", form.shoot_type === t ? "" : t)}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                     form.shoot_type === t
-                      ? "bg-[#4f8a1f] text-white border-[#4f8a1f]"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-[#4f8a1f]/40"
+                      ? "bg-[#4f8a1f] text-white brand-border"
+                      : "bg-white text-gray-600 border-gray-200 hover:brand-border/40"
                   }`}
                 >
                   {t}
@@ -279,7 +288,7 @@ function BookingPage() {
                 value={form.preferred_date}
                 onChange={(e) => set("preferred_date", e.target.value)}
                 min={new Date().toISOString().slice(0, 10)}
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
               />
             </div>
             <div>
@@ -288,7 +297,7 @@ function BookingPage() {
                 value={form.location}
                 onChange={(e) => set("location", e.target.value)}
                 placeholder="Manchester city centre"
-                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
               />
             </div>
           </div>
@@ -300,7 +309,7 @@ function BookingPage() {
               value={form.budget}
               onChange={(e) => set("budget", e.target.value)}
               placeholder="e.g. £500–£800"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm brand-ring"
             />
           </div>
 
@@ -316,8 +325,8 @@ function BookingPage() {
                     onClick={() => setSelectedPackage(selectedPackage === pkg.id ? "" : pkg.id)}
                     className={`w-full text-left rounded-xl border p-4 transition-colors ${
                       selectedPackage === pkg.id
-                        ? "border-[#4f8a1f] bg-[#f0f7e8]"
-                        : "border-gray-200 bg-white hover:border-[#4f8a1f]/40"
+                        ? "brand-border bg-[#f0f7e8]"
+                        : "border-gray-200 bg-white hover:brand-border/40"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -345,14 +354,14 @@ function BookingPage() {
               onChange={(e) => set("message", e.target.value)}
               placeholder="Any details about what you have in mind, style references, number of people, etc."
               rows={4}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f] resize-none"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 brand-ring resize-none"
             />
           </div>
 
           <button
             onClick={submit}
             disabled={sending}
-            className="w-full py-3 rounded-xl bg-[#4f8a1f] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="w-full py-3 rounded-xl text-white font-semibold text-sm brand-btn disabled:opacity-60 transition-opacity"
           >
             {sending ? "Sending…" : "Send booking request"}
           </button>

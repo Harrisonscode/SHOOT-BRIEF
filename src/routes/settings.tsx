@@ -27,6 +27,7 @@ function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [brandColor, setBrandColor] = useState("#4f8a1f");
+  const [fontFamily, setFontFamily] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [businessAddress, setBusinessAddress] = useState("");
   const [businessCity, setBusinessCity] = useState("");
@@ -46,6 +47,7 @@ function SettingsPage() {
       setDefaultType(profile.default_shoot_type ?? "");
       if (profile.avatar_url) resolveAvatarUrl(profile.avatar_url);
       setBrandColor(profile.brand_color ?? "#4f8a1f");
+      setFontFamily(profile.font_family ?? "");
       setBusinessAddress(profile.business_address ?? "");
       setBusinessCity(profile.business_city ?? "");
       setVatNumber(profile.vat_number ?? "");
@@ -110,6 +112,7 @@ function SettingsPage() {
       phone: phone || null,
       website: website || null,
       brand_color: brandColor || null,
+      font_family: fontFamily || null,
       business_address: businessAddress || null,
       business_city: businessCity || null,
       vat_number: vatNumber || null,
@@ -263,6 +266,26 @@ function SettingsPage() {
             <input value={brandColor} onChange={(e) => setBrandColor(e.target.value)} placeholder="#4f8a1f" className="w-28 px-3 py-2 rounded-md border border-input bg-background text-sm font-mono" />
             <div className="text-xs text-muted-foreground">Used on client portal, booking page, contracts and invoices</div>
           </div>
+        </div>
+
+        {/* Font */}
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1.5">Brand font</label>
+          <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="w-full sm:w-80 px-3 py-2 rounded-md border border-input bg-background text-sm">
+            <option value="">Default (Inter)</option>
+            <option value="'Playfair Display', Georgia, serif">Playfair Display — elegant, editorial</option>
+            <option value="'Cormorant Garamond', Georgia, serif">Cormorant Garamond — luxury, fine art</option>
+            <option value="'Montserrat', sans-serif">Montserrat — modern, clean</option>
+            <option value="'Raleway', sans-serif">Raleway — contemporary, minimal</option>
+            <option value="'Lato', sans-serif">Lato — friendly, professional</option>
+            <option value="Georgia, serif">Georgia — classic, timeless</option>
+            <option value="'DM Sans', sans-serif">DM Sans — geometric, sharp</option>
+          </select>
+          {fontFamily && (
+            <div className="mt-2 text-sm text-muted-foreground" style={{ fontFamily }}>
+              Preview: The quick brown fox jumps over the lazy dog
+            </div>
+          )}
         </div>
 
         {/* Business address */}

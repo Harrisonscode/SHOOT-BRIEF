@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { ApertureIcon } from "@/components/Logo";
+import { buildBrand, BrandStyle, BrandLogo } from "@/lib/brand";
 
 export const Route = createFileRoute("/sign/$token")({
   component: SignPage,
@@ -20,13 +21,19 @@ function SignPage() {
   useEffect(() => {
     supabase
       .from("contracts")
-      .select("*, shoots(name, client_name, date, location), profiles!contracts_user_id_fkey(display_name, business_name, email, phone, website, brand_color, logo_url)")
+      .select("*, shoots(name, client_name, date, location), profiles!contracts_user_id_fkey(display_name, business_name, email, phone, website, brand_color, logo_url, font_family, is_pro)")
       .eq("client_token", token)
       .maybeSingle()
       .then(({ data }) => {
         if (!data) { setNotFound(true); return; }
         setContract(data);
-        setPhotographer((data as any).profiles);
+        const prof = (data as any).profiles;
+        setPhotographer(prof);
+        // Resolve logo
+        if (prof?.logo_url && !prof.logo_url.startsWith("http")) {
+          const { data: signed } = await supabase.storage.from("logos").createSignedUrl(prof.logo_url, 3600);
+          if (signed?.signedUrl) setPhotographer((p: any) => ({ ...p, _resolvedLogoUrl: signed.signedUrl }));
+        }
         if (data.status === "signed") setSigned(true);
         if (data.shoots?.client_name) setName(data.shoots.client_name);
       });
@@ -44,7 +51,7 @@ function SignPage() {
     setSigned(true);
   };
 
-  const brandColor = photographer?.brand_color || "#4f8a1f";
+  const brand = buildBrand(photographer, photographer?._resolvedLogoUrl ?? null);
 
   if (notFound) return (
     <div className="min-h-screen bg-[#f8faf7] flex items-center justify-center p-6">
@@ -63,14 +70,14 @@ function SignPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8faf7]">
+    <div className="min-h-screen bg-[#f8faf7]" style={{ fontFamily: brand.fontFamily }}>
+      <BrandStyle brand={brand} />
       {/* Top bar */}
       <div
         className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100 flex items-center gap-3 px-4"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: '12px', height: 'calc(52px + env(safe-area-inset-top, 0px))' }}
       >
-        <span style={{ color: brandColor }}><ApertureIcon className="h-5 w-5" color={brandColor} /></span>
-        <span className="text-sm font-semibold text-gray-700">{photographer?.business_name || photographer?.display_name || "Shoot Brief"}</span>
+        <BrandLogo brand={brand} className="h-6 w-auto max-w-[120px]" />
       </div>
 
       <div style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
@@ -78,11 +85,11 @@ function SignPage() {
 
           {signed ? (
             <div className="text-center py-16">
-              <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: brandColor }} />
+              <CheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: brand.color }} />
               <h1 className="text-2xl font-bold text-gray-900">Contract signed!</h1>
               <p className="text-gray-500 mt-2">Thank you for signing. {photographer?.business_name || photographer?.display_name} will be in touch shortly.</p>
               {photographer?.email && (
-                <p className="text-sm text-gray-400 mt-4">Questions? Email <a href={`mailto:${photographer.email}`} className="underline" style={{ color: brandColor }}>{photographer.email}</a></p>
+                <p className="text-sm text-gray-400 mt-4">Questions? Email <a href={`mailto:${photographer.email}`} className="underline" style={{ color: brand.color }}>{photographer.email}</a></p>
               )}
             </div>
           ) : (
@@ -93,7 +100,7 @@ function SignPage() {
                 {contract.shoots && (
                   <p className="text-gray-500 mt-1 text-sm">{contract.shoots.name}{contract.shoots.client_name ? ` · ${contract.shoots.client_name}` : ""}</p>
                 )}
-                <div className="mt-3 flex items-center gap-1.5 text-sm" style={{ color: brandColor }}>
+                <div className="mt-3 flex items-center gap-1.5 text-sm" style={{ color: brand.color }}>
                   <span className="font-medium">{photographer?.business_name || photographer?.display_name}</span>
                 </div>
               </div>
@@ -119,7 +126,7 @@ function SignPage() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Type your full legal name"
                     className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
-                    style={{ '--tw-ring-color': brandColor } as any}
+                    style={{ '--tw-ring-color': brand.color } as any}
                   />
                 </div>
                 {name.trim() && (
@@ -132,7 +139,7 @@ function SignPage() {
                   onClick={sign}
                   disabled={!name.trim() || signing}
                   className="w-full py-3 rounded-xl text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center justify-center gap-2"
-                  style={{ backgroundColor: brandColor }}
+                  style={{ backgroundColor: brand.color }}
                 >
                   {signing && <Loader2 className="h-4 w-4 animate-spin" />}
                   {signing ? "Signing…" : "Sign contract"}

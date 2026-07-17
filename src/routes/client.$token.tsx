@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ApertureIcon } from "@/components/Logo";
+import { buildBrand, BrandStyle, BrandLogo } from "@/lib/brand";
 import { format, differenceInDays } from "date-fns";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
@@ -89,13 +90,19 @@ function ClientPortal() {
           client_name, client_notes, gallery_link,
           editing_progress, final_delivery_date,
           contract_status, payment_status,
-          profiles ( display_name, business_name, email, phone, website ),
+          profiles ( display_name, business_name, email, phone, website, brand_color, logo_url, font_family, is_pro ),
           packages ( name, description, price, currency, duration_hours, deliverables )
         `)
         .eq("client_token", token)
         .maybeSingle();
 
       if (error || !data) { setNotFound(true); return; }
+      // Resolve logo URL if set
+      const prof = (data as any).profiles;
+      if (prof?.logo_url && !prof.logo_url.startsWith("http")) {
+        const { data: signed } = await supabase.storage.from("logos").createSignedUrl(prof.logo_url, 3600);
+        if (signed?.signedUrl) (data as any).profiles._resolvedLogoUrl = signed.signedUrl;
+      }
       setShoot(data as any);
 
       // Check if review already submitted for this shoot
@@ -146,12 +153,13 @@ function ClientPortal() {
 
   if (!shoot) return (
     <div className="min-h-screen bg-[#f8faf7] flex items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#4f8a1f] border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "var(--brand-color) transparent transparent transparent" }} />
     </div>
   );
 
   const pct = Math.min(100, Math.max(0, shoot.editing_progress ?? 0));
   const photographer = shoot.profiles;
+  const brand = buildBrand(photographer, photographer?._resolvedLogoUrl ?? null);
   const pkg = shoot.packages;
   const shootDate = shoot.date ? new Date(shoot.date + "T00:00:00") : null;
   const deliveryDate = shoot.final_delivery_date ? new Date(shoot.final_delivery_date + "T00:00:00") : null;
@@ -195,7 +203,8 @@ function ClientPortal() {
   const depositOk = shoot.payment_status === "deposit_paid" || paymentOk;
 
   return (
-    <div className="min-h-screen bg-[#f8faf7]">
+    <div className="min-h-screen bg-[#f8faf7]" style={{ fontFamily: brand.fontFamily }}>
+      <BrandStyle brand={brand} />
       {/* Fixed top bar that respects iOS safe area */}
       <div
         className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-100 flex items-center gap-3 px-4"
@@ -212,11 +221,7 @@ function ClientPortal() {
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span style={{ color: "#4f8a1f" }}><ApertureIcon className="h-5 w-5" color="#4f8a1f" /></span>
-        <span className="text-sm font-semibold text-gray-700">Shoot Brief</span>
-        {photographer?.business_name && (
-          <span className="text-sm text-gray-400 ml-1">· {photographer.business_name}</span>
-        )}
+        <BrandLogo brand={brand} className="h-6 w-auto max-w-[120px]" />
       </div>
       {/* Offset content below fixed bar */}
       <div style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
@@ -250,7 +255,7 @@ function ClientPortal() {
                 </div>
               </div>
               {pkg.price !== null && (
-                <div className="text-2xl font-bold text-[#4f8a1f] shrink-0">
+                <div className="text-2xl font-bold brand-accent shrink-0">
                   {fmt(pkg.price, pkg.currency)}
                 </div>
               )}
@@ -264,7 +269,7 @@ function ClientPortal() {
           <div className="relative">
             <div className="absolute top-5 left-5 right-5 h-0.5 bg-gray-200" style={{ zIndex: 0 }} />
             <div
-              className="absolute top-5 left-5 h-0.5 bg-[#4f8a1f] transition-all duration-700"
+              className="absolute top-5 left-5 h-0.5 brand-btn transition-all duration-700"
               style={{
                 zIndex: 1,
                 width: stages[2].done
@@ -280,14 +285,14 @@ function ClientPortal() {
               {stages.map((stage) => (
                 <div key={stage.key} className="flex flex-col items-center gap-2" style={{ width: "33%" }}>
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center text-lg border-2 transition-all ${
-                    stage.done ? "bg-[#4f8a1f] border-[#4f8a1f]"
-                    : (stage as any).active ? "bg-white border-[#4f8a1f] ring-4 ring-[#4f8a1f]/20"
+                    stage.done ? "brand-btn brand-border"
+                    : (stage as any).active ? "bg-white brand-border ring-4 brand-ring"
                     : "bg-white border-gray-200"
                   }`}>
                     {stage.done ? "✓" : stage.icon}
                   </div>
                   <div className="text-center">
-                    <div className={`text-xs font-semibold ${stage.done || (stage as any).active ? "text-[#4f8a1f]" : "text-gray-400"}`}>
+                    <div className={`text-xs font-semibold ${stage.done || (stage as any).active ? "brand-accent" : "text-gray-400"}`}>
                       {stage.label}
                     </div>
                     {stage.date && (
@@ -303,10 +308,10 @@ function ClientPortal() {
             <div className="mt-8">
               <div className="flex justify-between text-xs text-gray-400 mb-1.5">
                 <span>Editing progress</span>
-                <span className="font-semibold text-[#4f8a1f]">{pct}%</span>
+                <span className="font-semibold" style={{ color: brand.color }}>{pct}%</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#4f8a1f] rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                <div className="h-full brand-btn rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
               </div>
               {deliveryDate && pct < 100 && (
                 <p className="text-xs text-gray-400 mt-2">
@@ -314,22 +319,22 @@ function ClientPortal() {
                   {differenceInDays(deliveryDate, today) > 0 && <> · {differenceInDays(deliveryDate, today)} days to go</>}
                 </p>
               )}
-              {pct === 100 && <p className="text-xs text-[#4f8a1f] font-medium mt-2">Editing complete! 🎉</p>}
+              {pct === 100 && <p className="text-xs font-medium mt-2" style={{ color: brand.color }} className="">Editing complete! 🎉</p>}
             </div>
           )}
         </div>
 
         {/* Status cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className={`bg-white rounded-xl border shadow-sm p-4 ${contractOk ? "border-[#4f8a1f]/30" : "border-gray-100"}`}>
+          <div className={`bg-white rounded-xl border shadow-sm p-4 ${contractOk ? "brand-border/30" : "border-gray-100"}`}>
             <div className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Contract</div>
-            <div className={`text-sm font-semibold ${contractOk ? "text-[#4f8a1f]" : "text-gray-600"}`}>
+            <div className={`text-sm font-semibold ${contractOk ? "brand-accent" : "text-gray-600"}`}>
               {contractLabel[shoot.contract_status ?? "unsigned"] ?? "Not set"}
             </div>
           </div>
-          <div className={`bg-white rounded-xl border shadow-sm p-4 ${paymentOk ? "border-[#4f8a1f]/30" : depositOk ? "border-amber-200" : "border-gray-100"}`}>
+          <div className={`bg-white rounded-xl border shadow-sm p-4 ${paymentOk ? "brand-border/30" : depositOk ? "border-amber-200" : "border-gray-100"}`}>
             <div className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Payment</div>
-            <div className={`text-sm font-semibold ${paymentOk ? "text-[#4f8a1f]" : depositOk ? "text-amber-600" : "text-gray-600"}`}>
+            <div className={`text-sm font-semibold ${paymentOk ? "brand-accent" : depositOk ? "text-amber-600" : "text-gray-600"}`}>
               {paymentLabel[shoot.payment_status ?? "unpaid"] ?? "Not set"}
             </div>
           </div>
@@ -343,7 +348,7 @@ function ClientPortal() {
               href={shoot.gallery_link}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#4f8a1f] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity" style={{ backgroundColor: brand.color }}
             >
               📁 View your photos →
             </a>
@@ -377,12 +382,12 @@ function ClientPortal() {
                   onChange={(e) => setReviewBody(e.target.value)}
                   placeholder="Tell us about your experience (optional)..."
                   rows={3}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4f8a1f]/30 focus:border-[#4f8a1f]"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm resize-none focus:outline-none focus:ring-2 focus:brand-ring focus:brand-border"
                 />
                 <button
                   onClick={submitReview}
                   disabled={submittingReview || rating === 0}
-                  className="w-full py-2.5 rounded-xl bg-[#4f8a1f] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="w-full py-2.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity" style={{ backgroundColor: brand.color }}
                 >
                   {submittingReview ? "Submitting…" : "Submit review"}
                 </button>
@@ -407,17 +412,17 @@ function ClientPortal() {
             )}
             <div className="mt-3 space-y-1">
               {photographer.email && (
-                <a href={`mailto:${photographer.email}`} className="flex items-center gap-2 text-sm text-[#4f8a1f] hover:underline">
+                <a href={`mailto:${photographer.email}`} className="flex items-center gap-2 text-sm hover:underline" style={{ color: brand.color }}>
                   ✉️ {photographer.email}
                 </a>
               )}
               {photographer.phone && (
-                <a href={`tel:${photographer.phone}`} className="flex items-center gap-2 text-sm text-[#4f8a1f] hover:underline">
+                <a href={`tel:${photographer.phone}`} className="flex items-center gap-2 text-sm hover:underline" style={{ color: brand.color }}>
                   📞 {photographer.phone}
                 </a>
               )}
               {photographer.website && (
-                <a href={photographer.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-[#4f8a1f] hover:underline">
+                <a href={photographer.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm hover:underline" style={{ color: brand.color }}>
                   🌐 {photographer.website}
                 </a>
               )}
