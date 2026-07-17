@@ -1,53 +1,77 @@
-// Shared helpers for shoot type colors and templates
-export const SHOOT_TYPES = ["Sports", "Nightclub", "Portrait", "Wedding", "Street", "Custom"] as const;
-export type ShootType = typeof SHOOT_TYPES[number];
-
-export const TYPE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  Sports: { bg: "bg-emerald-100", text: "text-emerald-700", dot: "bg-emerald-500" },
-  Nightclub: { bg: "bg-purple-100", text: "text-purple-700", dot: "bg-purple-500" },
-  Portrait: { bg: "bg-blue-100", text: "text-blue-700", dot: "bg-blue-500" },
-  Wedding: { bg: "bg-pink-100", text: "text-pink-700", dot: "bg-pink-500" },
-  Street: { bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500" },
-  Custom: { bg: "bg-slate-100", text: "text-slate-700", dot: "bg-slate-500" },
+// Branding config loaded from photographer profile
+export type BrandConfig = {
+  color: string;         // hex e.g. #3b6d11
+  fontFamily: string;    // CSS font-family string
+  logoUrl: string | null;
+  businessName: string;
 };
 
-export const MOODS = ["High contrast", "Moody", "Cinematic", "Golden", "Gritty", "Clean", "Editorial", "Dark", "Vibrant", "Soft", "Natural", "Dramatic"];
-
-export const GEAR = ["Camera body", "24-70mm f/2.8", "70-200mm f/2.8", "50mm f/1.8", "35mm f/1.8", "Wide angle", "Flash", "Speedlight", "Extra batteries", "Memory cards", "Monopod", "Tripod", "Reflector", "ND filters", "Rain cover"];
-
-export const SHOT_TAGS = ["Action", "Candid", "Editorial", "Portrait", "Atmosphere", "Detail", "Custom"];
-
-export type Shot = { id: string; text: string; tag: string; done: boolean };
-
-export const TEMPLATES: Record<string, { moods: string[]; shots: string[] }> = {
-  Nightclub: {
-    moods: ["Dark", "Gritty", "High contrast"],
-    shots: ["Arrivals at door", "Dance floor wide", "Dance floor close", "DJ booth", "Group shots", "Bar area", "Details / decor", "End of night crowd"],
-  },
-  Sports: {
-    moods: ["High contrast", "Gritty", "Dramatic"],
-    shots: ["Warm up", "Team huddle", "Kick off / tip off", "Action close up", "Crowd reaction", "Celebration", "Post match portrait", "Trophy / award"],
-  },
-  Portrait: {
-    moods: ["Clean", "Soft", "Natural"],
-    shots: ["Wide establishing", "3/4 length", "Close up face", "Looking away", "Laughing natural", "Hands / detail", "Environmental context"],
-  },
-  Wedding: {
-    moods: ["Golden", "Cinematic", "Editorial"],
-    shots: ["Getting ready detail", "First look", "Ceremony wide", "Vows close up", "Ring exchange", "First kiss", "Confetti / exit", "Reception speeches", "First dance", "Couple portraits golden hour"],
-  },
-  Street: {
-    moods: ["Moody", "Cinematic", "Natural"],
-    shots: ["Street wide", "Faces in crowd", "Motion blur", "Reflections", "Light and shadow", "Candid moment", "Architecture detail"],
-  },
+// Default Shoot Brief brand (used when photographer is free tier or hasn't set branding)
+export const DEFAULT_BRAND: BrandConfig = {
+  color: "#4f8a1f",
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  logoUrl: null,
+  businessName: "Shoot Brief",
 };
 
-export function progressOf(shotList: Shot[] | undefined): { done: number; total: number; pct: number } {
-  const total = shotList?.length ?? 0;
-  const done = shotList?.filter((s) => s.done).length ?? 0;
-  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+export function buildBrand(profile: {
+  brand_color?: string | null;
+  logo_url?: string | null;
+  display_name?: string | null;
+  business_name?: string | null;
+  is_pro?: boolean;
+  font_family?: string | null;
+} | null, resolvedLogoUrl?: string | null): BrandConfig {
+  // Only apply custom branding for Pro users
+  if (!profile?.is_pro) return DEFAULT_BRAND;
+
+  return {
+    color: profile.brand_color || DEFAULT_BRAND.color,
+    fontFamily: profile.font_family || DEFAULT_BRAND.fontFamily,
+    logoUrl: resolvedLogoUrl ?? null,
+    businessName: profile.business_name || profile.display_name || "Your Photographer",
+  };
 }
 
-export function newId() {
-  return Math.random().toString(36).slice(2, 10);
+// Injects brand CSS variables into the page
+export function BrandStyle({ brand }: { brand: BrandConfig }) {
+  return (
+    <style>{`
+      :root {
+        --brand-color: ${brand.color};
+        --brand-color-light: ${brand.color}22;
+        --brand-color-ring: ${brand.color}44;
+        --brand-font: ${brand.fontFamily};
+      }
+      body {
+        font-family: var(--brand-font) !important;
+      }
+      .brand-btn {
+        background-color: var(--brand-color) !important;
+        color: #fff !important;
+      }
+      .brand-btn:hover { opacity: 0.9; }
+      .brand-accent { color: var(--brand-color) !important; }
+      .brand-border { border-color: var(--brand-color) !important; }
+      .brand-ring:focus { 
+        outline: none !important;
+        box-shadow: 0 0 0 3px var(--brand-color-ring) !important;
+        border-color: var(--brand-color) !important;
+      }
+      .brand-progress { background-color: var(--brand-color) !important; }
+      .brand-bg-light { background-color: var(--brand-color-light) !important; }
+      .brand-check { accent-color: var(--brand-color); }
+    `}</style>
+  );
+}
+
+// Logo or fallback aperture icon
+export function BrandLogo({ brand, className = "h-7 w-auto max-w-[140px]" }: { brand: BrandConfig; className?: string }) {
+  if (brand.logoUrl) {
+    return <img src={brand.logoUrl} alt={brand.businessName} className={className} style={{ objectFit: "contain" }} />;
+  }
+  // Fallback: show business name in brand color
+  return (
+    <span className="font-bold text-base" style={{ color: brand.color }}>{brand.businessName}</span>
+  );
 }
