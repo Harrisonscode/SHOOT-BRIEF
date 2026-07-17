@@ -4,7 +4,6 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { FileText, Plus, Send, CheckCircle, Clock, Trash2, X, ExternalLink, Copy, CheckCheck, Lock } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
