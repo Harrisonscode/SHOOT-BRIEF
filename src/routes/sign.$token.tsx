@@ -34,15 +34,15 @@ function SignPage() {
           const { data: signed } = await supabase.storage.from("logos").createSignedUrl(prof.logo_url, 3600);
           if (signed?.signedUrl) setPhotographer((p: any) => ({ ...p, _resolvedLogoUrl: signed.signedUrl }));
         }
-        if (data.status === "signed") setSigned(true);
-        if (data.shoots?.client_name) setName(data.shoots.client_name);
+        if ((data as any).status === "signed") setSigned(true);
+        if ((data as any).shoots?.client_name) setName((data as any).shoots.client_name);
       });
   }, [token]);
 
   const sign = async () => {
     if (!name.trim()) { alert("Please enter your full name to sign"); return; }
     setSigning(true);
-    await supabase.from("contracts").update({
+    await (supabase.from("contracts") as any).update({
       status: "signed",
       signed_at: new Date().toISOString(),
       signed_name: name.trim(),

@@ -71,8 +71,8 @@ By signing this contract, both parties agree to the terms above.`;
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      supabase.from("contracts").select("*, shoots(name, client_name)").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("shoots").select("id, name, client_name").eq("user_id", user.id).order("date", { ascending: false }),
+      (supabase.from("contracts") as any).select("*, shoots(name, client_name)").eq("user_id", user.id).order("created_at", { ascending: false }),
+      (supabase.from("shoots") as any).select("id, name, client_name").eq("user_id", user.id).order("date", { ascending: false }),
     ]).then(([{ data: c }, { data: s }]) => {
       setContracts((c as any) ?? []);
       setShoots((s as any) ?? []);
@@ -82,13 +82,13 @@ By signing this contract, both parties agree to the terms above.`;
   const createContract = async () => {
     if (!user || !selectedShoot) { toast.error("Select a shoot first"); return; }
     setSaving(true);
-    const { data, error } = await supabase.from("contracts").insert({
+    const { data, error } = await (supabase.from("contracts") as any).insert({
       user_id: user.id,
       shoot_id: selectedShoot,
       title: editTitle || "Photography Contract",
       body: editBody || DEFAULT_CONTRACT,
       status: "draft",
-    } as any).select("*, shoots(name, client_name)").single();
+    } as any).select("*, shoots(name, client_name)").single() as any;
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     setContracts((prev) => [data as any, ...(prev ?? [])]);
@@ -100,7 +100,7 @@ By signing this contract, both parties agree to the terms above.`;
   };
 
   const updateContract = async (id: string, patch: Partial<Contract>) => {
-    await supabase.from("contracts").update(patch as any).eq("id", id);
+    await (supabase.from("contracts") as any).update(patch as any).eq("id", id);
     setContracts((prev) => prev?.map((c) => c.id === id ? { ...c, ...patch } : c) ?? null);
     if (selected?.id === id) setSelected((s) => s ? { ...s, ...patch } : null);
   };
@@ -117,7 +117,7 @@ By signing this contract, both parties agree to the terms above.`;
 
   const deleteContract = async (id: string) => {
     if (!confirm("Delete this contract?")) return;
-    await supabase.from("contracts").delete().eq("id", id);
+    await (supabase.from("contracts") as any).delete().eq("id", id);
     setContracts((prev) => prev?.filter((c) => c.id !== id) ?? null);
     if (selected?.id === id) setSelected(null);
   };
