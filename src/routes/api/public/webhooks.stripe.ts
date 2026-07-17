@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
         const setPro = async (userId: string, isPro: boolean, customerId?: string | null) => {
           const patch: { is_pro: boolean; stripe_customer_id?: string } = { is_pro: isPro };
           if (customerId) patch.stripe_customer_id = customerId;
-          const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
+          const { error } = await (supabaseAdmin.from("profiles") as any).update(patch).eq("id", userId);
           if (error) console.error("[stripe-webhook] profile update failed", error);
         };
 
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
             .from("profiles")
             .select("id")
             .eq("stripe_customer_id", customerId)
-            .maybeSingle();
+            .maybeSingle() as any;
           if (data?.id) return data.id;
           // Fallback: look up the customer's email and match a profile.
           try {
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
               .from("profiles")
               .select("id")
               .eq("email", email)
-              .maybeSingle();
+              .maybeSingle() as any;
             return byEmail?.id ?? null;
           } catch {
             return null;
@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
                     .from("profiles")
                     .select("email, display_name")
                     .eq("id", userId)
-                    .maybeSingle();
+                    .maybeSingle() as any;
                   if (profile?.email) {
                     const { sendEmail, proUpgradeEmail } = await import("@/lib/email.server");
                     await sendEmail(proUpgradeEmail({
