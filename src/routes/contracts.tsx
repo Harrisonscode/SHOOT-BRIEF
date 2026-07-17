@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { FileText, Plus, Send, CheckCircle, Clock, Trash2, X, ExternalLink, Copy, CheckCheck } from "lucide-react";
+import { FileText, Plus, Send, CheckCircle, Clock, Trash2, X, ExternalLink, Copy, CheckCheck, Lock } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -26,6 +27,8 @@ type Contract = {
 
 function ContractsPage() {
   const { user, profile } = useAuth();
+  const isPro = !!profile?.is_pro;
+
   const [contracts, setContracts] = useState<Contract[] | null>(null);
   const [shoots, setShoots] = useState<Array<{ id: string; name: string; client_name: string | null }>>([]);
   const [showNew, setShowNew] = useState(false);
@@ -54,6 +57,17 @@ Cancellations made less than 14 days before the shoot date may result in forfeit
 Full payment is due on or before the shoot date unless otherwise agreed.
 
 By signing this contract, both parties agree to the terms above.`;
+
+  if (profile && !isPro) {
+    return (
+      <div className="rounded-lg border bg-card shadow-card py-16 px-6 text-center max-w-md">
+        <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4"><Lock className="h-6 w-6 text-muted-foreground" /></div>
+        <h3 className="font-semibold text-lg">Contracts is a Pro feature</h3>
+        <p className="text-sm text-muted-foreground mt-2">Upgrade to Pro to create and send contracts, get digital signatures, and manage your client agreements.</p>
+        <Link to="/billing" className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">Upgrade to Pro →</Link>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!user) return;

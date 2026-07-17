@@ -219,11 +219,22 @@ function SettingsPage() {
       </section>
 
       {/* Branding */}
-      <section className="rounded-lg border bg-card shadow-card p-5 space-y-4">
-        <div>
-          <h2 className="font-semibold">Branding</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Your logo, colours and business details appear on client portals, booking pages, contracts and invoices.</p>
+      <section className="rounded-lg border bg-card shadow-card p-5 space-y-4 relative">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold flex items-center gap-2">Branding {!profile?.is_pro && <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Pro</span>}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Your logo, colours and business details appear on client portals, booking pages, contracts and invoices.</p>
+          </div>
+          {!profile?.is_pro && (
+            <a href="/billing" className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90">Upgrade to Pro</a>
+          )}
         </div>
+        {!profile?.is_pro && (
+          <div className="rounded-md border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            Upgrade to Pro to customise your branding — logo, colours, and business details shown on all client-facing pages.
+          </div>
+        )}
+        {profile?.is_pro && (<>
 
         {/* Logo */}
         <div>
@@ -285,6 +296,7 @@ function SettingsPage() {
         </div>
 
         <button onClick={saveProfile} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">Save branding</button>
+        </>)}
       </section>
 
       {/* Preferences */}
