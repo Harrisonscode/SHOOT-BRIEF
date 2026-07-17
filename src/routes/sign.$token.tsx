@@ -24,7 +24,7 @@ function SignPage() {
       .select("*, shoots(name, client_name, date, location), profiles!contracts_user_id_fkey(display_name, business_name, email, phone, website, brand_color, logo_url, font_family, is_pro)")
       .eq("client_token", token)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!data) { setNotFound(true); return; }
         setContract(data);
         const prof = (data as any).profiles;
