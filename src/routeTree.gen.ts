@@ -24,6 +24,11 @@ import { Route as PlannerIdRouteImport } from './routes/planner.$id'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as ApiAuthSendEmailRouteImport } from './routes/api/auth/send-email'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
+import { Route as ApiPrivateNotifyBookingRouteImport } from './routes/api/private/notify/booking'
+import { Route as ApiPrivateNotifyReviewRouteImport } from './routes/api/private/notify/review'
+import { Route as ContractsRouteImport } from './routes/contracts'
+import { Route as InvoicesRouteImport } from './routes/invoices'
+import { Route as SignTokenRouteImport } from './routes/sign.$token'
 
 const WelcomeProRoute = WelcomeProRouteImport.update({ id: '/welcome-pro', path: '/welcome-pro', getParentRoute: () => rootRouteImport } as any)
 const TermsRoute = TermsRouteImport.update({ id: '/terms', path: '/terms', getParentRoute: () => rootRouteImport } as any)
@@ -46,6 +51,11 @@ const PlannerIdRoute = PlannerIdRouteImport.update({ id: '/planner/$id', path: '
 const ApiAuthSendEmailRoute = ApiAuthSendEmailRouteImport.update({ id: '/api/auth/send-email', path: '/api/auth/send-email', getParentRoute: () => rootRouteImport } as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({ id: '/api/public/webhooks/stripe', path: '/api/public/webhooks/stripe', getParentRoute: () => rootRouteImport } as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({ id: '/api/public/calendar/$token', path: '/api/public/calendar/$token', getParentRoute: () => rootRouteImport } as any)
+const ApiPrivateNotifyBookingRoute = ApiPrivateNotifyBookingRouteImport.update({ id: '/api/private/notify/booking', path: '/api/private/notify/booking', getParentRoute: () => rootRouteImport } as any)
+const ApiPrivateNotifyReviewRoute = ApiPrivateNotifyReviewRouteImport.update({ id: '/api/private/notify/review', path: '/api/private/notify/review', getParentRoute: () => rootRouteImport } as any)
+const ContractsRoute = ContractsRouteImport.update({ id: '/contracts', path: '/contracts', getParentRoute: () => rootRouteImport } as any)
+const InvoicesRoute = InvoicesRouteImport.update({ id: '/invoices', path: '/invoices', getParentRoute: () => rootRouteImport } as any)
+const SignTokenRoute = SignTokenRouteImport.update({ id: '/sign/$token', path: '/sign/$token', getParentRoute: () => rootRouteImport } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -148,6 +158,11 @@ export interface RootRouteChildren {
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiAuthSendEmailRoute: typeof ApiAuthSendEmailRoute
+  ApiPrivateNotifyBookingRoute: typeof ApiPrivateNotifyBookingRoute
+  ApiPrivateNotifyReviewRoute: typeof ApiPrivateNotifyReviewRoute
+  ContractsRoute: typeof ContractsRoute
+  InvoicesRoute: typeof InvoicesRoute
+  SignTokenRoute: typeof SignTokenRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -172,6 +187,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksStripeRoute,
   ApiPublicCalendarTokenRoute,
   ApiAuthSendEmailRoute,
+  ApiPrivateNotifyBookingRoute,
+  ApiPrivateNotifyReviewRoute,
+  ContractsRoute,
+  InvoicesRoute,
+  SignTokenRoute,
 }
 
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addRouteTypes()
