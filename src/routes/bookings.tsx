@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
-import { Check, X, Clock, Copy, CheckCheck, ExternalLink, Settings2 } from "lucide-react";
+import { Check, X, Clock, Copy, CheckCheck, ExternalLink, Settings2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/bookings")({
@@ -28,6 +28,8 @@ type BookingRequest = {
 
 function BookingsPage() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [creatingShoot, setCreatingShoot] = useState(false);
   const [requests, setRequests] = useState<BookingRequest[] | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "accepted" | "declined">("all");
   const [selected, setSelected] = useState<BookingRequest | null>(null);
@@ -76,6 +78,43 @@ function BookingsPage() {
         body: JSON.stringify({ action: "accepted", booking_request_id: id }),
       }).catch(() => {}); // fire and forget
     }
+  };
+
+  const createShootFromBooking = async (booking: BookingRequest) => {
+    if (!user) return;
+    if (profile && !profile.is_pro) {
+      const { count } = await supabase.from("shoots").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+      if ((count ?? 0) >= 3) {
+        toast.error("Free plan limit reached. Upgrade to Pro for unlimited shoots.");
+        navigate({ to: "/billing" });
+        return;
+      }
+    }
+    setCreatingShoot(true);
+    const { data, error } = await supabase
+      .from("shoots")
+      .insert({
+        user_id: user.id,
+        name: booking.shoot_type
+          ? `${booking.shoot_type} — ${booking.client_name}`
+          : booking.client_name,
+        shoot_type: booking.shoot_type ?? "Custom",
+        date: booking.preferred_date ?? null,
+        location: booking.location ?? null,
+        client_name: booking.client_name,
+        client_email: booking.client_email,
+        client_phone: booking.client_phone ?? null,
+        status: "planning",
+        notes: booking.message
+          ? `Client notes from booking request:\n${booking.message}${booking.budget ? `\n\nBudget: ${booking.budget}` : ""}`
+          : booking.budget ? `Budget: ${booking.budget}` : null,
+      } as any)
+      .select()
+      .single();
+    setCreatingShoot(false);
+    if (error) { toast.error("Failed to create shoot: " + error.message); return; }
+    toast.success("Shoot created from booking");
+    navigate({ to: "/planner/$id", params: { id: data.id } });
   };
 
   const copyLink = () => {
@@ -267,13 +306,17 @@ function BookingsPage() {
             {selected.status === "accepted" && (
               <div className="mt-6">
                 <p className="text-sm text-muted-foreground mb-3">Ready to create a shoot from this request?</p>
-                <Link
-                  to="/planner"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
-                  onClick={() => setSelected(null)}
+                <button
+                  onClick={() => createShootFromBooking(selected)}
+                  disabled={creatingShoot}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60"
                 >
-                  Create shoot →
-                </Link>
+                  {creatingShoot ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {creatingShoot ? "Creating shoot…" : "Create shoot →"}
+                </button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Auto-fills client name, email{selected.preferred_date ? ", date" : ""}{selected.location ? ", location" : ""}{selected.shoot_type ? ", shoot type" : ""} from this booking.
+                </p>
               </div>
             )}
 
