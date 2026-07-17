@@ -2,6 +2,7 @@
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS brand_color    TEXT,           -- hex e.g. #3b6d11
   ADD COLUMN IF NOT EXISTS logo_url       TEXT,           -- storage path or URL
+  ADD COLUMN IF NOT EXISTS font_family    TEXT,           -- CSS font name e.g. 'Playfair Display'
   ADD COLUMN IF NOT EXISTS business_address TEXT,
   ADD COLUMN IF NOT EXISTS business_city  TEXT,
   ADD COLUMN IF NOT EXISTS vat_number     TEXT,
