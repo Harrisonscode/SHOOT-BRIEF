@@ -136,7 +136,9 @@ function Planner() {
       if (error) toast.error("Save failed: " + error.message);
 
     }, 800);
-    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
   }, [shoot]);
 
   const update = useCallback(<K extends keyof Shoot>(k: K, v: Shoot[K]) => {
@@ -195,18 +197,20 @@ function Planner() {
 
   const cancelShoot = async () => {
     const isUntouched =
-      shoot.name === "Untitled Shoot" &&
+      (shoot.name === "Untitled Shoot" || shoot.name === "" || !shoot.name) &&
       !shoot.location &&
       !shoot.date &&
+      !shoot.time &&
+      !shoot.client_name &&
+      !shoot.client_email &&
+      !shoot.notes &&
       (shoot.mood_tags?.length ?? 0) === 0 &&
       (shoot.shot_list?.length ?? 0) === 0 &&
-      (shoot.gear?.length ?? 0) === 0 &&
-      !shoot.notes;
+      (shoot.gear?.length ?? 0) === 0;
 
     if (isUntouched) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      const { error } = await supabase.from("shoots").delete().eq("id", shoot.id);
-      if (error) { toast.error(error.message); return; }
+      await (supabase.from("shoots") as any).delete().eq("id", shoot.id);
     }
     navigate({ to: "/dashboard" });
   };
@@ -296,7 +300,7 @@ function Planner() {
       <input
         value={shoot.name}
         onChange={(e) => update("name", e.target.value)}
-        className="w-full text-2xl sm:text-3xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 px-0 break-all"
+        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 px-0 break-all"
         placeholder="Shoot name"
       />
 
@@ -886,6 +890,7 @@ function ShotList({ value, onChange }: { value: Shot[]; onChange: (v: Shot[]) =>
                 value={s.text}
                 onChange={(e) => update(s.id, { text: e.target.value })}
                 placeholder="Describe the shot…"
+                style={{ fontSize: '16px' }}
                 className={`flex-1 px-2 py-1.5 rounded-md border border-transparent bg-transparent text-sm focus:border-input focus:bg-background focus:outline-none ${s.done ? "line-through opacity-50" : ""}`}
               />
               <select value={s.tag} onChange={(e) => update(s.id, { tag: e.target.value })} className="text-xs px-2 py-1 rounded border bg-background">
