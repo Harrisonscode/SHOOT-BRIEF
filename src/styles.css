@@ -232,13 +232,30 @@ button, a, input, select, textarea {
 }
 
 /* Input font size 16px minimum — prevents iOS auto-zoom on focus */
-input, select, textarea {
-  font-size: max(16px, 1rem);
+input, select, textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="time"] {
+  font-size: 16px !important;
 }
 
 /* On desktop, allow smaller font sizes */
 @media (min-width: 768px) {
   input, select, textarea {
-    font-size: 0.875rem;
+    font-size: 0.875rem !important;
   }
+}
+
+/* Date/time inputs must never overflow */
+input[type="date"],
+input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
