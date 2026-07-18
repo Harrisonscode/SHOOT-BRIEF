@@ -91,6 +91,7 @@ function Planner() {
   const [duplicating, setDuplicating] = useState(false);
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
   const skipSave = useRef(true);
 
   useEffect(() => {
@@ -108,6 +109,7 @@ function Planner() {
     if (skipSave.current) { skipSave.current = false; return; }
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
+      setAutoSaving(true);
       const { error } = await supabase
         .from("shoots")
         .update({
@@ -134,7 +136,7 @@ function Planner() {
         } as any)
         .eq("id", shoot.id);
       if (error) toast.error("Save failed: " + error.message);
-
+      setAutoSaving(false);
     }, 800);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -360,6 +362,15 @@ function Planner() {
       {/* Bottom save bar — above bottom tab bar on mobile */}
       <div className="fixed bottom-0 left-0 right-0 md:bottom-0 md:left-60 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-4 sm:px-6 py-3 z-40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}>
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
+          {/* Auto-save indicator — subtle, silent feedback */}
+          <div className="flex items-center gap-1.5 flex-1">
+            {autoSaving && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary inline-block" />
+                Saving…
+              </span>
+            )}
+          </div>
           <button
             onClick={cancelShoot}
             className="flex-1 sm:flex-none px-4 py-2.5 rounded-md border bg-background hover:bg-muted text-sm font-medium"
@@ -367,7 +378,7 @@ function Planner() {
             Cancel
           </button>
           <button
-            onClick={saveNow}
+            onClick={() => { if ("vibrate" in navigator) navigator.vibrate(10); saveNow(); }}
             className="flex-1 sm:flex-none px-6 py-2.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 text-sm font-medium"
           >
             Save shoot
@@ -882,7 +893,13 @@ function ShotList({ value, onChange }: { value: Shot[]; onChange: (v: Shot[]) =>
         <ul className="space-y-2">
           {value.map((s) => (
             <li key={s.id} className="flex items-center gap-2 min-w-0">
-              <button onClick={() => update(s.id, { done: !s.done })} className={`h-5 w-5 shrink-0 rounded border flex items-center justify-center ${s.done ? "bg-primary border-primary text-primary-foreground" : "bg-background"}`}>
+              <button
+                onClick={() => {
+                  update(s.id, { done: !s.done });
+                  if ("vibrate" in navigator) navigator.vibrate(s.done ? 4 : 8);
+                }}
+                className={`shot-check h-5 w-5 shrink-0 rounded border flex items-center justify-center ${s.done ? "bg-primary border-primary text-primary-foreground checked" : "bg-background"}`}
+              >
                 {s.done && <Check className="h-3.5 w-3.5" />}
               </button>
               <input
