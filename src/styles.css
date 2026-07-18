@@ -157,72 +157,154 @@ button, a, input, select, textarea {
   }
 }
 
-/* ─── Micro-animations — native feel for interactions ────────────────────────── */
+/* ─── Micro-animations — research-backed, native iOS feel ─────────────────────
+   Key principles from Notion, Linear, Apollo:
+   - 100-200ms for immediate feedback (button press, toggle)
+   - 280-350ms for spatial transitions (modals, drawers)
+   - Spring curves (cubic-bezier(0.32, 0.72, 0, 1)) for natural deceleration
+   - Opacity + scale together feel more natural than either alone
+   - Animations should be INVISIBLE helpers — users shouldn't notice them
+─────────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
 
-  /* Button press — subtle, not jarring */
+  /* ── Button press: spring scale (iOS native feel) ── */
+  button:not(:disabled) {
+    transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 100ms ease;
+    will-change: transform;
+  }
   button:not(:disabled):active {
-    opacity: 0.75;
-    transition: opacity 60ms ease-out;
-  }
-
-  /* Card tap — very subtle */
-  a .shadow-card:active,
-  button .shadow-card:active {
+    transform: scale(0.95);
     opacity: 0.85;
-    transition: opacity 60ms ease-out;
   }
 
-  /* Modal/sheet entrance */
-  [role="dialog"],
-  .modal-enter {
-    animation: modal-slide-up 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  /* ── Primary action button: slightly more pronounced ── */
+  button.bg-primary:not(:disabled):active {
+    transform: scale(0.96);
   }
 
-  @keyframes modal-slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(24px) scale(0.97);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+  /* ── Tappable cards: subtle depth response ── */
+  a[href]:not(.no-anim) {
+    transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 120ms ease;
+  }
+  a[href]:not(.no-anim):active {
+    transform: scale(0.98);
+    opacity: 0.8;
   }
 
-  /* Bottom sheet / drawer */
-  .drawer-enter {
-    animation: drawer-slide-up 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  /* ── Checkbox/toggle: satisfying spring ── */
+  input[type="checkbox"] {
+    transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  input[type="checkbox"]:active {
+    transform: scale(0.85);
   }
 
-  @keyframes drawer-slide-up {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
+  /* ── Shot list checkbox: bouncy check ── */
+  .shot-check {
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+                background-color 150ms ease,
+                border-color 150ms ease;
+  }
+  .shot-check:active {
+    transform: scale(0.8);
+  }
+  .shot-check.checked {
+    animation: check-bounce 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes check-bounce {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
   }
 
-  /* Smooth tab switch in bottom nav */
-  nav a, nav button {
-    transition: color 150ms ease, opacity 150ms ease;
+  /* ── Modal/sheet entrance: smooth deceleration ── */
+  [role="dialog"], .modal-enter {
+    animation: modal-in 300ms cubic-bezier(0.32, 0.72, 0, 1) both;
   }
-
-  /* Skeleton loading pulse — smoother than default */
-  .animate-pulse {
-    animation: pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* Toast entrance */
-  [data-sonner-toaster] [data-sonner-toast] {
-    animation: toast-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
-  }
-
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Drawer/bottom sheet: slide up ── */
+  .drawer-enter {
+    animation: drawer-up 340ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  @keyframes drawer-up {
+    from { transform: translateY(100%); opacity: 0.8; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ── Bottom nav items: smooth active state ── */
+  nav a, nav button {
+    transition: color 180ms ease, opacity 180ms ease, transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  nav a:active, nav button:active {
+    transform: scale(0.9);
+  }
+
+  /* ── New shoot FAB button: satisfying pop ── */
+  .nav-fab {
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+  }
+  .nav-fab:active {
+    transform: scale(0.88);
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  /* ── Input focus: gentle lift ── */
+  input:focus, textarea:focus, select:focus {
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  /* ── Skeleton loading: smooth breathing ── */
+  .animate-pulse {
+    animation: skeleton-breathe 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes skeleton-breathe {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+  }
+
+  /* ── Progress bar: smooth fill ── */
+  .h-full.bg-primary {
+    transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Toast: slide up from bottom ── */
+  [data-sonner-toast] {
+    animation: toast-rise 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  @keyframes toast-rise {
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Page content fade in: subtle entrance ── */
+  main > div {
+    animation: content-fade 200ms ease both;
+  }
+  @keyframes content-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Success state: gentle pulse ── */
+  .success-pulse {
+    animation: success-ring 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes success-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(79, 138, 31, 0.4); }
+    70%  { box-shadow: 0 0 0 8px rgba(79, 138, 31, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(79, 138, 31, 0); }
+  }
+
+  /* ── Spinning loader: smooth ── */
+  .animate-spin {
+    animation: spin 700ms linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 }
 
