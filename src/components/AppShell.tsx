@@ -200,7 +200,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               }`}
             >
               {isNew ? (
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mb-0.5 shadow-lg">
+                <div className="nav-fab h-8 w-8 rounded-full bg-primary flex items-center justify-center mb-0.5 shadow-lg">
                   <Icon className="h-4 w-4 text-primary-foreground" />
                 </div>
               ) : (
