@@ -33,6 +33,7 @@ type Invoice = {
   client_token: string;
   paid_at: string | null;
   payment_link_enabled: boolean;
+  payment_link_url: string | null;
   created_at: string;
   shoots: { name: string; client_name: string | null; client_email: string | null } | null;
 };

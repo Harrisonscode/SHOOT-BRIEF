@@ -174,12 +174,12 @@ function InvoicePage() {
               )}
 
               {/* Payment button */}
-              {invoice.payment_link_enabled && invoice.status !== "paid" && (
+              {invoice.payment_link_enabled && invoice.payment_link_url && invoice.status !== "paid" && (
                 <div className="rounded-xl border bg-white shadow-sm p-6 text-center">
                   <h3 className="font-semibold text-gray-900 mb-2">Pay this invoice</h3>
                   <p className="text-sm text-gray-500 mb-4">Secure payment processed by Stripe</p>
                   <a
-                    href={`https://buy.stripe.com/invoice-${invoice.client_token}`}
+                    href={invoice.payment_link_url}
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: brand.color }}
                   >
