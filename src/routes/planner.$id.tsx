@@ -297,7 +297,7 @@ function Planner() {
   };
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto pb-28 overflow-x-hidden">
+    <div className="space-y-5 max-w-3xl mx-auto pb-28 overflow-x-hidden w-full min-w-0">
       {/* Shoot name */}
       <input
         value={shoot.name}
@@ -845,7 +845,7 @@ function WeatherCard({ location, date }: { location: string; date: string }) {
           <AlertTriangle className="h-4 w-4" /> Rain likely — consider weather protection for your gear.
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Stat l="Temp" v={`${Math.round(data.temperature_2m_max?.[0] ?? 0)}°C`} />
         <Stat l="Conditions" v={desc} />
         <Stat l="Cloud" v={`${Math.round(data.cloud_cover_mean?.[0] ?? 0)}%`} />
@@ -892,7 +892,7 @@ function ShotList({ value, onChange }: { value: Shot[]; onChange: (v: Shot[]) =>
       ) : (
         <ul className="space-y-2">
           {value.map((s) => (
-            <li key={s.id} className="flex items-center gap-2 min-w-0">
+            <li key={s.id} className="flex items-center gap-2 min-w-0 overflow-hidden">
               <button
                 onClick={() => {
                   update(s.id, { done: !s.done });
@@ -1096,7 +1096,7 @@ function RepeatModal({ onClose, onConfirm, busy, shootDate, alreadyInSeries }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-card rounded-lg border shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card rounded-lg border shadow-lg max-w-md w-full max-h-[85vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold flex items-center gap-2"><Repeat className="h-4 w-4" /> Repeat this shoot</h3>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded"><X className="h-5 w-5" /></button>
@@ -1114,7 +1114,7 @@ function RepeatModal({ onClose, onConfirm, busy, shootDate, alreadyInSeries }: {
         <div className="space-y-4">
           <div>
             <label className="block text-xs text-muted-foreground mb-1.5">Frequency</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 w-full">
               {(["weekly", "monthly", "custom"] as const).map((f) => (
                 <button
                   key={f}
@@ -1182,7 +1182,7 @@ function TemplateModal({ onClose, onPick, hasData, isPro }: { onClose: () => voi
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h3 className="font-semibold">Choose a template</h3>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded"><X className="h-5 w-5" /></button>
