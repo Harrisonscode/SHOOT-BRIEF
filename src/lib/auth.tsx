@@ -7,6 +7,8 @@ export type Profile = {
   display_name: string | null;
   email: string | null;
   is_pro: boolean;
+  is_studio: boolean;
+  stripe_plan: string | null;
   stripe_customer_id: string | null;
   dark_mode: boolean;
   default_shoot_type: string | null;

@@ -223,19 +223,27 @@ export function reviewSubmittedEmail(opts: {
 export function proUpgradeEmail(opts: {
   userEmail: string;
   userName: string | null;
+  plan?: string;
 }) {
+  const isStudio = opts.plan === "studio";
+  const planName = isStudio ? "Studio" : "Pro";
   const html = base(`
-    ${h1("Welcome to Shoot Brief Pro! 🎉")}
-    ${p(`Hi ${opts.userName ?? "there"}, your upgrade to Pro is confirmed.`)}
+    ${h1(`Welcome to Shoot Brief ${planName}! 🎉`)}
+    ${p(`Hi ${opts.userName ?? "there"}, your upgrade to ${planName} is confirmed.`)}
     ${p("You now have access to:")}
     <ul style="margin:12px 0;padding-left:20px;color:#374151;font-size:15px;line-height:2;">
       <li>Unlimited shoots</li>
       <li>PDF shoot briefs</li>
       <li>Client portal & shareable links</li>
+      <li>Booking requests & email notifications</li>
+      <li>Contracts with digital signing</li>
+      <li>Professional invoicing</li>
+      <li>Custom branding (logo, colours, font)</li>
       <li>Inspiration board</li>
       <li>Calendar sync</li>
       <li>Expense tracking</li>
       <li>Recurring shoots</li>
+      ${isStudio ? `<li><strong>Invoice payment links</strong></li><li><strong>Automated email sequences</strong></li>` : ""}
     </ul>
     ${btn("https://shootbrief.app/dashboard", "Go to your dashboard")}
     ${p(`Questions? Reply to this email anytime.`)}
@@ -243,7 +251,7 @@ export function proUpgradeEmail(opts: {
 
   return {
     to: opts.userEmail,
-    subject: "Welcome to Shoot Brief Pro!",
+    subject: `Welcome to Shoot Brief ${planName}!`,
     html,
   };
 }
