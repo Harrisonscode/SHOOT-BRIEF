@@ -239,8 +239,8 @@ By signing this contract, both parties agree to the terms above.`;
 
       {/* New contract modal */}
       {showNew && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowNew(false)}>
-          <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 bg-black/50 overflow-y-auto" onClick={() => setShowNew(false)}>
+          <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full p-6 my-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-lg">New contract</h2>
               <button onClick={() => setShowNew(false)} className="p-1.5 rounded hover:bg-muted"><X className="h-5 w-5" /></button>
