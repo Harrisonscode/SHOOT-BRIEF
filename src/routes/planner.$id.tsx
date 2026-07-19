@@ -1084,7 +1084,7 @@ function RepeatModal({ onClose, onConfirm, busy, shootDate, alreadyInSeries }: {
 
   if (!shootDate) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
         <div className="bg-card rounded-lg border shadow-lg max-w-sm w-full p-5" onClick={(e) => e.stopPropagation()}>
           <h3 className="font-semibold mb-1">Set a date first</h3>
           <p className="text-sm text-muted-foreground">Add a shoot date before setting up a repeating series.</p>
@@ -1095,8 +1095,8 @@ function RepeatModal({ onClose, onConfirm, busy, shootDate, alreadyInSeries }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-card rounded-lg border shadow-lg max-w-md w-full p-5 my-8 mx-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-card rounded-lg border shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold flex items-center gap-2"><Repeat className="h-4 w-4" /> Repeat this shoot</h3>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded"><X className="h-5 w-5" /></button>
@@ -1181,8 +1181,8 @@ function TemplateModal({ onClose, onPick, hasData, isPro }: { onClose: () => voi
     onPick(name);
   };
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-card rounded-lg border shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b">
           <h3 className="font-semibold">Choose a template</h3>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded"><X className="h-5 w-5" /></button>
