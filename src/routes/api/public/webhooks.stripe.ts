@@ -25,11 +25,18 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const setPro = async (userId: string, isPro: boolean, customerId?: string | null) => {
-          const patch: { is_pro: boolean; stripe_customer_id?: string } = { is_pro: isPro };
+        const setPlan = async (userId: string, plan: string | null, customerId?: string | null) => {
+          const isPro = plan === "pro" || plan === "studio";
+          const isStudio = plan === "studio";
+          const patch: any = { is_pro: isPro, is_studio: isStudio, stripe_plan: plan };
           if (customerId) patch.stripe_customer_id = customerId;
           const { error } = await (supabaseAdmin.from("profiles") as any).update(patch).eq("id", userId);
           if (error) console.error("[stripe-webhook] profile update failed", error);
+        };
+
+        // Keep legacy setPro for backwards compat
+        const setPro = async (userId: string, isPro: boolean, customerId?: string | null) => {
+          await setPlan(userId, isPro ? "pro" : null, customerId);
         };
 
         const resolveUserIdFromCustomer = async (customerId: string): Promise<string | null> => {
@@ -63,9 +70,9 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
                 session.client_reference_id ??
                 session.metadata?.user_id ??
                 (session.customer ? await resolveUserIdFromCustomer(session.customer) : null);
+              const plan = session.metadata?.plan ?? "pro";
               if (userId) {
-                await setPro(userId, true, session.customer ?? null);
-                // Send Pro upgrade confirmation email
+                await setPlan(userId, plan, session.customer ?? null);
                 try {
                   const { data: profile } = await supabaseAdmin
                     .from("profiles")
@@ -74,13 +81,10 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
                     .maybeSingle() as any;
                   if (profile?.email) {
                     const { sendEmail, proUpgradeEmail } = await import("@/lib/email.server");
-                    await sendEmail(proUpgradeEmail({
-                      userEmail: profile.email,
-                      userName: profile.display_name,
-                    }));
+                    await sendEmail(proUpgradeEmail({ userEmail: profile.email, userName: profile.display_name, plan }));
                   }
                 } catch (e) {
-                  console.error("[stripe-webhook] pro email failed", e);
+                  console.error("[stripe-webhook] upgrade email failed", e);
                 }
               }
               break;
@@ -88,21 +92,18 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
             case "customer.subscription.created":
             case "customer.subscription.updated": {
               const sub = event.data.object as any;
-              const userId =
-                sub.metadata?.user_id ??
-                (sub.customer ? await resolveUserIdFromCustomer(sub.customer) : null);
+              const userId = sub.metadata?.user_id ?? (sub.customer ? await resolveUserIdFromCustomer(sub.customer) : null);
               if (userId) {
                 const active = ["active", "trialing", "past_due"].includes(sub.status);
-                await setPro(userId, active, sub.customer ?? null);
+                const plan = active ? (sub.metadata?.plan ?? "pro") : null;
+                await setPlan(userId, plan, sub.customer ?? null);
               }
               break;
             }
             case "customer.subscription.deleted": {
               const sub = event.data.object as any;
-              const userId =
-                sub.metadata?.user_id ??
-                (sub.customer ? await resolveUserIdFromCustomer(sub.customer) : null);
-              if (userId) await setPro(userId, false, sub.customer ?? null);
+              const userId = sub.metadata?.user_id ?? (sub.customer ? await resolveUserIdFromCustomer(sub.customer) : null);
+              if (userId) await setPlan(userId, null, sub.customer ?? null);
               break;
             }
             default:
