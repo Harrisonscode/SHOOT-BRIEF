@@ -123,9 +123,9 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
       },
     });
 
-    // Update invoice with payment link
+    // Update invoice with payment link URL
     await (supabase.from("invoices") as any)
-      .update({ payment_link_enabled: true } as any)
+      .update({ payment_link_enabled: true, payment_link_url: paymentLink.url } as any)
       .eq("id", data.invoice_id);
 
     return { url: paymentLink.url };
