@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Receipt, Plus, Send, CheckCircle, Trash2, X, Copy, CheckCheck, Pencil, Lock } from "lucide-react";
+import { Receipt, Plus, Send, CheckCircle, Trash2, X, Copy, CheckCheck, Lock, CreditCard, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useServerFn } from "@tanstack/react-start";
+import { createInvoicePaymentLink } from "@/lib/stripe.functions";
 
 export const Route = createFileRoute("/invoices")({
   component: () => <AppShell title="Invoices"><InvoicesPage /></AppShell>,
@@ -30,6 +32,7 @@ type Invoice = {
   notes: string | null;
   client_token: string;
   paid_at: string | null;
+  payment_link_enabled: boolean;
   created_at: string;
   shoots: { name: string; client_name: string | null; client_email: string | null } | null;
 };
@@ -40,6 +43,9 @@ const fmt = (amount: number, currency = "GBP") => `${CUR_SYM[currency] ?? curren
 function InvoicesPage() {
   const { user, profile } = useAuth();
   const isPro = !!profile?.is_pro;
+  const isStudio = !!profile?.is_studio;
+  const [creatingPaymentLink, setCreatingPaymentLink] = useState(false);
+  const makePaymentLink = useServerFn(createInvoicePaymentLink);
 
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [shoots, setShoots] = useState<Array<{ id: string; name: string; client_name: string | null; client_email: string | null }>>([]);
@@ -143,6 +149,29 @@ function InvoicesPage() {
     await supabase.from("invoices").delete().eq("id", id);
     setInvoices((prev) => prev?.filter((inv) => inv.id !== id) ?? null);
     if (selected?.id === id) setSelected(null);
+  };
+
+  const createPaymentLink = async (invoice: Invoice) => {
+    if (!isStudio) { toast.error("Payment links are a Studio feature"); return; }
+    setCreatingPaymentLink(true);
+    try {
+      const { url } = await makePaymentLink({
+        data: {
+          invoice_id: invoice.id,
+          amount: invoice.total,
+          currency: invoice.currency,
+          description: `${invoice.invoice_number} — ${invoice.shoots?.name ?? "Photography services"}`,
+        }
+      });
+      // Update local state
+      setInvoices((prev) => prev?.map((inv) => inv.id === invoice.id ? { ...inv, payment_link_enabled: true } : inv) ?? null);
+      setSelected((s) => s?.id === invoice.id ? { ...s, payment_link_enabled: true } : s);
+      toast.success("Payment link created — clients can now pay online");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not create payment link");
+    } finally {
+      setCreatingPaymentLink(false);
+    }
   };
 
   const copyViewLink = (invoice: Invoice) => {
@@ -284,6 +313,22 @@ function InvoicesPage() {
                   {copied ? <CheckCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                   {copied ? "Copied!" : "Copy client link"}
                 </button>
+                {!selected.payment_link_enabled && selected.status !== "paid" && isStudio && (
+                  <button onClick={() => createPaymentLink(selected)} disabled={creatingPaymentLink} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 text-sm disabled:opacity-60">
+                    {creatingPaymentLink ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                    Enable online payment
+                  </button>
+                )}
+                {selected.payment_link_enabled && selected.status !== "paid" && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-purple-50 text-purple-700 text-sm border border-purple-200">
+                    <CreditCard className="h-3.5 w-3.5" /> Payment link active
+                  </div>
+                )}
+                {!isStudio && selected.status !== "paid" && (
+                  <Link to="/billing" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border bg-muted text-muted-foreground text-sm hover:bg-muted/80">
+                    <CreditCard className="h-3.5 w-3.5" /> Enable online payment (Studio)
+                  </Link>
+                )}
               </div>
 
               {selected.paid_at && (
