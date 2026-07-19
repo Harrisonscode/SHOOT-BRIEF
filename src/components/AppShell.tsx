@@ -177,10 +177,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
       {/* Main content */}
       <main
-        className="flex-1 md:ml-60 md:pt-0 pb-20 md:pb-0"
-        style={{ paddingTop: 'calc(44px + env(safe-area-inset-top, 0px))' }}
+        className="flex-1 md:ml-60 md:pt-0 md:pb-0 overflow-x-hidden"
+        style={{
+          paddingTop: 'calc(44px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+        }}
       >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10 py-6 md:py-8">{children}</div>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10 py-6 md:py-8 overflow-x-hidden">{children}</div>
       </main>
 
       {/* Mobile bottom tab bar — sits above iPhone home indicator */}
