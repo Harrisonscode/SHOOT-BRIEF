@@ -37,6 +37,7 @@ function ContractsPage() {
   const [selectedShoot, setSelectedShoot] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [auditEvents, setAuditEvents] = useState<any[]>([]);
 
   const DEFAULT_CONTRACT = profile?.contract_template || `This photography agreement is entered into between the photographer and the client.
 
@@ -97,6 +98,14 @@ By signing this contract, both parties agree to the terms above.`;
     setEditTitle("");
     setEditBody("");
     setSelectedShoot("");
+  };
+
+  const loadAuditTrail = async (contractId: string) => {
+    const { data } = await (supabase.from("contract_events") as any)
+      .select("*")
+      .eq("contract_id", contractId)
+      .order("occurred_at", { ascending: true });
+    setAuditEvents(data ?? []);
   };
 
   const updateContract = async (id: string, patch: Partial<Contract>) => {
@@ -197,7 +206,11 @@ By signing this contract, both parties agree to the terms above.`;
 
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${statusBadge(selected.status)}`}>{selected.status}</span>
-                {selected.signed_at && <span className="text-xs text-muted-foreground">Signed by {selected.signed_name} on {format(new Date(selected.signed_at), "d MMM yyyy")}</span>}
+                {selected.signed_at && (
+                  <div className="text-xs text-muted-foreground">
+                    <span>Signed by <strong>{selected.signed_name}</strong> on {format(new Date(selected.signed_at), "d MMM yyyy 'at' HH:mm")}</span>
+                  </div>
+                )}
               </div>
 
               {/* Signing link */}
@@ -212,6 +225,36 @@ By signing this contract, both parties agree to the terms above.`;
               <div className="rounded-md border bg-background p-4 text-sm leading-relaxed max-h-64 overflow-y-auto whitespace-pre-wrap text-muted-foreground font-mono text-xs">
                 {selected.body}
               </div>
+
+              {/* Audit trail */}
+              {selected.status === "signed" && (
+                <div>
+                  <button
+                    onClick={() => loadAuditTrail(selected.id)}
+                    className="text-xs text-muted-foreground hover:text-primary underline mb-2"
+                  >
+                    {auditEvents.length > 0 ? "Hide" : "View"} audit trail
+                  </button>
+                  {auditEvents.length > 0 && (
+                    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-1">
+                        <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                        Audit certificate
+                      </div>
+                      {auditEvents.map((e: any, i: number) => (
+                        <div key={i} className="text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            {e.event_type === "signed" ? "✅ Signed" : e.event_type === "viewed" ? "👁 Viewed" : e.event_type === "sent" ? "📤 Sent" : e.event_type}
+                          </span>
+                          {" · "}{new Date(e.occurred_at).toLocaleString("en-GB")}
+                          {e.ip_address && e.ip_address !== "unknown" && ` · IP: ${e.ip_address}`}
+                          {e.metadata?.signed_name && ` · ${e.metadata.signed_name}`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2 flex-wrap">
