@@ -24,6 +24,7 @@ import { Route as PlannerIdRouteImport } from './routes/planner.$id'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks.stripe'
 import { Route as ApiAuthSendEmailRouteImport } from './routes/api/auth/send-email'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
+import { Route as ApiPublicContractEventRouteImport } from './routes/api/public/contract-event'
 import { Route as ApiPrivateNotifyBookingRouteImport } from './routes/api/private/notify/booking'
 import { Route as ApiPrivateNotifyReviewRouteImport } from './routes/api/private/notify/review'
 import { Route as ContractsRouteImport } from './routes/contracts'
@@ -53,6 +54,7 @@ const PlannerIdRoute = PlannerIdRouteImport.update({ id: '/planner/$id', path: '
 const ApiAuthSendEmailRoute = ApiAuthSendEmailRouteImport.update({ id: '/api/auth/send-email', path: '/api/auth/send-email', getParentRoute: () => rootRouteImport } as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({ id: '/api/public/webhooks/stripe', path: '/api/public/webhooks/stripe', getParentRoute: () => rootRouteImport } as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({ id: '/api/public/calendar/$token', path: '/api/public/calendar/$token', getParentRoute: () => rootRouteImport } as any)
+const ApiPublicContractEventRoute = ApiPublicContractEventRouteImport.update({ id: '/api/public/contract-event', path: '/api/public/contract-event', getParentRoute: () => rootRouteImport } as any)
 const ApiPrivateNotifyBookingRoute = ApiPrivateNotifyBookingRouteImport.update({ id: '/api/private/notify/booking', path: '/api/private/notify/booking', getParentRoute: () => rootRouteImport } as any)
 const ApiPrivateNotifyReviewRoute = ApiPrivateNotifyReviewRouteImport.update({ id: '/api/private/notify/review', path: '/api/private/notify/review', getParentRoute: () => rootRouteImport } as any)
 const ContractsRoute = ContractsRouteImport.update({ id: '/contracts', path: '/contracts', getParentRoute: () => rootRouteImport } as any)
