@@ -72,11 +72,25 @@ function SettingsPage() {
   const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Logo must be under 5MB"); return; }
     setLogoUploading(true);
-    const ext = file.name.split(".").pop();
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
     const path = `${user.id}/logo.${ext}`;
-    await supabase.storage.from("logos").upload(path, file, { upsert: true });
-    await supabase.from("profiles").update({ logo_url: path } as any).eq("id", user.id);
+
+    // Try uploading
+    const { error: upErr } = await supabase.storage.from("logos").upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      toast.error("Logo upload failed: " + upErr.message);
+      setLogoUploading(false);
+      if (logoRef.current) logoRef.current.value = "";
+      return;
+    }
+
+    // Save path to profile
+    const { error: dbErr } = await (supabase.from("profiles") as any).update({ logo_url: path } as any).eq("id", user.id);
+    if (dbErr) { toast.error("Failed to save logo: " + dbErr.message); }
+    else { toast.success("Logo uploaded"); }
+
     setLogoUploading(false);
     resolveLogo(path);
     refreshProfile();
