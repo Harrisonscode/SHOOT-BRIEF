@@ -29,6 +29,8 @@ import { Route as ApiPrivateNotifyReviewRouteImport } from './routes/api/private
 import { Route as ContractsRouteImport } from './routes/contracts'
 import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as SignTokenRouteImport } from './routes/sign.$token'
+import { Route as InvoiceTokenRouteImport } from './routes/invoice.$token'
+import { Route as AutomationsRouteImport } from './routes/automations'
 
 const WelcomeProRoute = WelcomeProRouteImport.update({ id: '/welcome-pro', path: '/welcome-pro', getParentRoute: () => rootRouteImport } as any)
 const TermsRoute = TermsRouteImport.update({ id: '/terms', path: '/terms', getParentRoute: () => rootRouteImport } as any)
@@ -56,6 +58,8 @@ const ApiPrivateNotifyReviewRoute = ApiPrivateNotifyReviewRouteImport.update({ i
 const ContractsRoute = ContractsRouteImport.update({ id: '/contracts', path: '/contracts', getParentRoute: () => rootRouteImport } as any)
 const InvoicesRoute = InvoicesRouteImport.update({ id: '/invoices', path: '/invoices', getParentRoute: () => rootRouteImport } as any)
 const SignTokenRoute = SignTokenRouteImport.update({ id: '/sign/$token', path: '/sign/$token', getParentRoute: () => rootRouteImport } as any)
+const InvoiceTokenRoute = InvoiceTokenRouteImport.update({ id: '/invoice/$token', path: '/invoice/$token', getParentRoute: () => rootRouteImport } as any)
+const AutomationsRoute = AutomationsRouteImport.update({ id: '/automations', path: '/automations', getParentRoute: () => rootRouteImport } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -163,6 +167,8 @@ export interface RootRouteChildren {
   ContractsRoute: typeof ContractsRoute
   InvoicesRoute: typeof InvoicesRoute
   SignTokenRoute: typeof SignTokenRoute
+  InvoiceTokenRoute: typeof InvoiceTokenRoute
+  AutomationsRoute: typeof AutomationsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -192,6 +198,8 @@ const rootRouteChildren: RootRouteChildren = {
   ContractsRoute,
   InvoicesRoute,
   SignTokenRoute,
+  InvoiceTokenRoute,
+  AutomationsRoute,
 }
 
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addRouteTypes()
