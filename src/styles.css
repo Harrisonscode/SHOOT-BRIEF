@@ -144,9 +144,17 @@ input, select, textarea {
 }
 
 /* Prevent pinch zoom */
-body {
-  touch-action: pan-x pan-y;
-  overscroll-behavior-y: none;
+@media (max-width: 767px) {
+  body {
+    touch-action: pan-x pan-y;
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Prevent horizontal overflow globally but never block vertical scroll */
+html, body {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ─── Input font size — prevents iOS auto-zoom on focus ─────────────────────── */
