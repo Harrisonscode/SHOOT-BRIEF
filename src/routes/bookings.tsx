@@ -267,12 +267,14 @@ function BookingsPage() {
                 <h2 className="text-xl font-bold">{selected.client_name}</h2>
                 <StatusBadge status={selected.status} />
               </div>
-              <button onClick={() => setSelected(null)} className="p-1.5 rounded hover:bg-muted">
-                <X className="h-5 w-5" />
-              </button>
-              <button onClick={() => deleteRequest(selected.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Delete">
-                <Trash2 className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => deleteRequest(selected.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Delete">
+                  <Trash2 className="h-5 w-5" />
+                </button>
+                <button onClick={() => setSelected(null)} className="p-1.5 rounded hover:bg-muted">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 text-sm">
