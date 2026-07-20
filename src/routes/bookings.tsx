@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
-import { Check, X, Clock, Copy, CheckCheck, ExternalLink, Settings2, Loader2 } from "lucide-react";
+import { Check, X, Clock, Copy, CheckCheck, ExternalLink, Settings2, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/bookings")({
@@ -78,6 +78,14 @@ function BookingsPage() {
         body: JSON.stringify({ action: "accepted", booking_request_id: id }),
       }).catch(() => {}); // fire and forget
     }
+  };
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm("Delete this booking request? This cannot be undone.")) return;
+    await (supabase.from("booking_requests") as any).delete().eq("id", id);
+    setRequests((prev) => prev?.filter((r) => r.id !== id) ?? null);
+    if (selected?.id === id) setSelected(null);
+    toast.success("Booking request deleted");
   };
 
   const createShootFromBooking = async (booking: BookingRequest) => {
