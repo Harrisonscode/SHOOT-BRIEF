@@ -270,6 +270,9 @@ function BookingsPage() {
               <button onClick={() => setSelected(null)} className="p-1.5 rounded hover:bg-muted">
                 <X className="h-5 w-5" />
               </button>
+              <button onClick={() => deleteRequest(selected.id)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Delete">
+                <Trash2 className="h-5 w-5" />
+              </button>
             </div>
 
             <div className="space-y-3 text-sm">
