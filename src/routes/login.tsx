@@ -19,9 +19,6 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-  return msg;
-}
-
 function LoginPage() {
   const { tab, redirect } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">(tab === "signup" ? "signup" : "signin");
