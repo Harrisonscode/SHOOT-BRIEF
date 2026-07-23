@@ -11,6 +11,14 @@ export const Route = createFileRoute("/api/public/contract-event")({
 
         const { contract_id, event_type, metadata } = body;
         if (!contract_id || !event_type) return new Response("Missing fields", { status: 400 });
+        
+        // Whitelist allowed event types — prevent abuse
+        const ALLOWED_EVENTS = ["viewed", "signed"];
+        if (!ALLOWED_EVENTS.includes(event_type)) return new Response("Invalid event type", { status: 400 });
+        
+        // Validate contract_id is a UUID
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!UUID_RE.test(contract_id)) return new Response("Invalid contract ID", { status: 400 });
 
         // Get real IP from server headers (not spoofable from client)
         const ip =
