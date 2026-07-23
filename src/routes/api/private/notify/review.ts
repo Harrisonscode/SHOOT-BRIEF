@@ -10,6 +10,15 @@ export const Route = createFileRoute("/api/private/notify/review")({
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY!;
         const sb = createClient(supabaseUrl, supabaseKey);
 
+        // Verify internal request - must come from same origin
+        const origin = request.headers.get("origin") ?? "";
+        const referer = request.headers.get("referer") ?? "";
+        const isInternal = origin.includes("shootbrief.app") || 
+                          referer.includes("shootbrief.app") ||
+                          origin.includes("localhost") ||
+                          origin.includes("vercel.app");
+        if (!isInternal) return new Response("Forbidden", { status: 403 });
+
         let body: any;
         try { body = await request.json(); } catch { return new Response("Bad request", { status: 400 }); }
 
