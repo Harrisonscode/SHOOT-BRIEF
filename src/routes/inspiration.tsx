@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,6 @@ import {
   FolderPlus, Loader2, X, ArrowLeft, Images, Pencil, CheckSquare
 } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "@tanstack/react-router";
 import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/inspiration")({
