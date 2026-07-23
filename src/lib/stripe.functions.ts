@@ -5,7 +5,7 @@ import Stripe from "stripe";
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
+  if (!key) throw new Error("Billing is not available right now — please try again later");
   return new Stripe(key);
 }
 
@@ -27,7 +27,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       ? process.env.STRIPE_STUDIO_PRICE_ID
       : process.env.STRIPE_PRO_PRICE_ID;
 
-    if (!priceId) throw new Error(`Price ID for ${plan} plan is not configured. Add ${plan === "studio" ? "STRIPE_STUDIO_PRICE_ID" : "STRIPE_PRO_PRICE_ID"} to environment variables.`);
+    if (!priceId) throw new Error("This plan is not available right now — please contact support");
 
     const stripe = getStripe();
     const { supabase, userId, claims } = context;
@@ -78,7 +78,7 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
       const existing = await stripe.customers.list({ email, limit: 1 });
       if (existing.data.length > 0) customerId = existing.data[0].id;
     }
-    if (!customerId) throw new Error("No Stripe customer found for this account");
+    if (!customerId) throw new Error("No billing account found — please upgrade first before managing billing");
 
     const origin = getOrigin();
     const portal = await stripe.billingPortal.sessions.create({
@@ -102,7 +102,7 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle() as any;
 
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Invoice not found — it may have been deleted");
 
     const amountPence = Math.round(data.amount * 100);
 
