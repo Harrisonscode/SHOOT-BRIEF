@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { TYPE_COLORS } from "@/lib/shoot";
 import { ChevronLeft, ChevronRight, CalendarDays, Copy, CheckCheck, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/calendar")({
   component: () => <AppShell title="Calendar"><CalendarPage /></AppShell>,
@@ -53,7 +54,7 @@ function CalendarPage() {
       if ((count ?? 0) >= 3) { toast.error("Free plan limit reached."); navigate({ to: "/billing" }); return; }
     }
     const { data, error } = await supabase.from("shoots").insert({ user_id: user.id, name: "Untitled Shoot", date: dateStr }).select().single();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     navigate({ to: "/planner/$id", params: { id: data.id } });
   };
 

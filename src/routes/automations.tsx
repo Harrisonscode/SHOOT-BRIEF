@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Zap, Plus, Trash2, X, Lock, ToggleLeft, ToggleRight } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/automations")({
   component: () => <AppShell title="Automations"><AutomationsPage /></AppShell>,
@@ -169,7 +170,7 @@ function AutomationsPage() {
       .select()
       .single() as any;
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setRules((prev) => [...(prev ?? []), data]);
     setShowNew(false);
     setFormName(""); setFormSubject(""); setFormBody("");

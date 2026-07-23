@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useServerFn } from "@tanstack/react-start";
 import { createInvoicePaymentLink } from "@/lib/stripe.functions";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/invoices")({
   component: () => <AppShell title="Invoices"><InvoicesPage /></AppShell>,
@@ -128,7 +129,7 @@ function InvoicesPage() {
       notes: newNotes || null,
     } as any).select("*, shoots(name, client_name, client_email)").single();
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setInvoices((prev) => [data as any, ...(prev ?? [])]);
     setSelected(data as any);
     setShowNew(false);
@@ -169,7 +170,7 @@ function InvoicesPage() {
       setSelected((s) => s?.id === invoice.id ? { ...s, payment_link_enabled: true } : s);
       toast.success("Payment link created — clients can now pay online");
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not create payment link");
+      toast.error(friendlyError(e) || "Could not create payment link");
     } finally {
       setCreatingPaymentLink(false);
     }

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateShootBriefPdf, fetchAvatarAsDataUrl } from "@/lib/pdf";
+import { friendlyError } from "@/lib/errors";
 
 function copyToClipboard(text: string): Promise<void> {
   // Modern clipboard API (works on most browsers)
@@ -135,7 +136,7 @@ function Planner() {
           package_id: shoot.package_id,
         } as any)
         .eq("id", shoot.id);
-      if (error) toast.error("Save failed: " + error.message);
+      if (error) toast.error(friendlyError(error));
       setAutoSaving(false);
     }, 800);
     return () => {
@@ -192,7 +193,7 @@ function Planner() {
         package_id: shoot.package_id,
       } as any)
       .eq("id", shoot.id);
-    if (error) { toast.error("Save failed: " + error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success("Shoot saved");
     navigate({ to: "/dashboard" });
   };
@@ -981,7 +982,7 @@ function ExpensesCard({ shootId }: { shootId: string }) {
       .select()
       .single();
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setExpenses((prev) => [data as any, ...(prev ?? [])]);
     setDesc(""); setAmount(""); setCategory("Other"); setShowAdd(false);
     

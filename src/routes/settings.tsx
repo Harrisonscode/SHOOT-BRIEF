@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SHOOT_TYPES } from "@/lib/shoot";
 import { toast } from "sonner";
 import { Camera, Loader2 } from "lucide-react";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/settings")({
   component: () => <AppShell title="Settings"><SettingsPage /></AppShell>,
@@ -111,7 +112,7 @@ function SettingsPage() {
     if (upErr) { setAvatarUploading(false); return toast.error(upErr.message); }
     const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
     setAvatarUploading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Profile photo updated");
     await resolveAvatarUrl(path);
     refreshProfile();
@@ -133,7 +134,7 @@ function SettingsPage() {
       invoice_notes: invoiceNotes || null,
       contract_template: contractTemplate || null,
     } as any).eq("id", user.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Profile saved");
     refreshProfile();
   };
@@ -147,7 +148,7 @@ function SettingsPage() {
   const resetPassword = async () => {
     if (!user?.email) return;
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo: window.location.origin + "/login" });
-    if (error) toast.error(error.message); else toast.success("Password reset email sent");
+    if (error) toast.error(friendlyError(error)); else toast.success("Password reset email sent");
   };
 
   const deleteAccount = async () => {

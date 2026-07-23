@@ -29,14 +29,23 @@ function NotFound() {
 
 function ErrorBoundary({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  // Don't expose raw error messages to users — log to console only
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
+        <div className="text-4xl mb-4">😕</div>
         <h1 className="text-xl font-semibold">Something went wrong</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <button onClick={reset} className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
-          Try again
-        </button>
+        <p className="mt-2 text-sm text-muted-foreground">
+          An unexpected error occurred. Try refreshing the page — if it keeps happening, check your connection.
+        </p>
+        <div className="flex gap-3 mt-6 justify-center">
+          <button onClick={reset} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            Try again
+          </button>
+          <a href="/dashboard" className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted">
+            Go home
+          </a>
+        </div>
       </div>
     </div>
   );

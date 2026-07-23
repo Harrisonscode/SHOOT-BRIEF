@@ -7,6 +7,7 @@ import { Camera, Plus, MoreVertical, Trash2, CheckSquare, Square, X, Inbox, Star
 import { progressOf, TYPE_COLORS, type Shot } from "@/lib/shoot";
 import { toast } from "sonner";
 import { format, isPast, isToday, isThisWeek, differenceInCalendarDays } from "date-fns";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Shoot Brief" }] }),
@@ -74,14 +75,14 @@ function Dashboard() {
       .insert({ user_id: user.id, name: "Untitled Shoot", shoot_type: profile?.default_shoot_type ?? "Custom" })
       .select()
       .single();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     navigate({ to: "/planner/$id", params: { id: data.id } });
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this shoot? This cannot be undone.")) return;
     const { error } = await supabase.from("shoots").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success("Shoot deleted");
     load();
   };
@@ -98,7 +99,7 @@ function Dashboard() {
     if (selected.size === 0) return;
     if (!confirm(`Delete ${selected.size} shoot${selected.size !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     const { error } = await supabase.from("shoots").delete().in("id", Array.from(selected));
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`${selected.size} shoot${selected.size !== 1 ? "s" : ""} deleted`);
     setSelected(new Set());
     setSelectMode(false);
@@ -116,7 +117,7 @@ function Dashboard() {
     if (completed.length === 0) { toast.error("No completed shoots to delete"); return; }
     if (!confirm(`Delete ${completed.length} completed/past shoot${completed.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     const { error } = await supabase.from("shoots").delete().in("id", completed.map((s) => s.id));
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`${completed.length} shoot${completed.length !== 1 ? "s" : ""} deleted`);
     load();
   };

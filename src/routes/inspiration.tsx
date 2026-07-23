@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/inspiration")({
   component: () => <AppShell title="Inspiration"><InspirationPage /></AppShell>,
@@ -121,7 +122,7 @@ function InspirationPage() {
       return;
     }
     const { error } = await supabase.from("galleries").insert({ user_id: user.id, name: trimmed });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setGalleries((prev) => [...prev, { name: trimmed, count: 0 }]);
     setActiveGallery(trimmed);
     toast.success(`Gallery "${trimmed}" created`);
@@ -199,7 +200,7 @@ function InspirationPage() {
   const updateImage = async (id: string, patch: Partial<Img>) => {
     setImages((imgs) => imgs?.map((i) => i.id === id ? { ...i, ...patch } : i) ?? null);
     const { error } = await supabase.from("inspiration_images").update(patch as any).eq("id", id);
-    if (error) toast.error("Could not save: " + error.message);
+    if (error) toast.error(friendlyError(error));
     // Refresh gallery counts/covers
     if (patch.gallery !== undefined) {
       setGalleries((prev) => prev.map((g) => {

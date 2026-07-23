@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Plus, Trash2, Pencil, X, Check, Package } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/packages")({
   head: () => ({ meta: [{ title: "Packages — Shoot Brief" }] }),
@@ -81,7 +82,7 @@ function PackagesPage() {
     setSaving(true);
     if (editing) {
       const { error } = await supabase.from("packages").update({ ...form } as any).eq("id", editing.id);
-      if (error) { toast.error(error.message); setSaving(false); return; }
+      if (error) { toast.error(friendlyError(error)); setSaving(false); return; }
       setPackages((prev) => prev?.map((p) => p.id === editing.id ? { ...editing, ...form } : p) ?? null);
       toast.success("Package updated");
     } else {
@@ -90,7 +91,7 @@ function PackagesPage() {
         .insert({ ...form, user_id: user.id } as any)
         .select()
         .single();
-      if (error) { toast.error(error.message); setSaving(false); return; }
+      if (error) { toast.error(friendlyError(error)); setSaving(false); return; }
       setPackages((prev) => [...(prev ?? []), data as any]);
       toast.success("Package created");
     }

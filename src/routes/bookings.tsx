@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { format } from "date-fns";
 import { Check, X, Clock, Copy, CheckCheck, ExternalLink, Settings2, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/bookings")({
   head: () => ({ meta: [{ title: "Bookings — Shoot Brief" }] }),
@@ -120,7 +121,7 @@ function BookingsPage() {
       .select()
       .single();
     setCreatingShoot(false);
-    if (error) { toast.error("Failed to create shoot: " + error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success("Shoot created from booking");
     navigate({ to: "/planner/$id", params: { id: data.id } });
   };
@@ -143,7 +144,7 @@ function BookingsPage() {
       .update({ booking_slug: cleanSlug, booking_intro: intro.trim() || null, booking_active: active } as any)
       .eq("id", user.id);
     setSavingSettings(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setSlug(cleanSlug);
     toast.success("Booking page saved");
     setShowSettings(false);

@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
+import { friendlyAuthError } from "@/lib/errors";
 
 const searchSchema = z.object({
   tab: z.enum(["signin", "signup"]).optional(),
@@ -18,11 +19,6 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-function friendlyAuthError(msg: string) {
-  const m = msg.toLowerCase();
-  if (m.includes("rate limit") || m.includes("too many") || m.includes("for security purposes")) {
-    return "Too many attempts. Please wait a few minutes before trying again.";
-  }
   return msg;
 }
 

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/planner/")({
   component: NewShoot,
@@ -27,7 +28,7 @@ function NewShoot() {
         .insert({ user_id: user.id, name: "Untitled Shoot", shoot_type: profile?.default_shoot_type ?? "Custom" })
         .select()
         .single();
-      if (error) { toast.error(error.message); navigate({ to: "/dashboard" }); return; }
+      if (error) { toast.error(friendlyError(error)); navigate({ to: "/dashboard" }); return; }
       navigate({ to: "/planner/$id", params: { id: data.id }, replace: true });
     })();
   }, [user, profile, loading]);

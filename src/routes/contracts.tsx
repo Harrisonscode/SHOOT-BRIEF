@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { FileText, Plus, Send, CheckCircle, Clock, Trash2, X, ExternalLink, Copy, CheckCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/contracts")({
   component: () => <AppShell title="Contracts"><ContractsPage /></AppShell>,
@@ -91,7 +92,7 @@ By signing this contract, both parties agree to the terms above.`;
       status: "draft",
     } as any).select("*, shoots(name, client_name)").single() as any;
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setContracts((prev) => [data as any, ...(prev ?? [])]);
     setShowNew(false);
     setSelected(data as any);

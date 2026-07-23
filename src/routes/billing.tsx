@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createCheckoutSession, createCustomerPortalSession } from "@/lib/stripe.functions";
+import { friendlyError } from "@/lib/errors";
 
 export const Route = createFileRoute("/billing")({
   component: () => <AppShell title="Billing"><BillingPage /></AppShell>,
@@ -61,7 +62,7 @@ function BillingPage() {
       const { url } = await checkout({ data: { plan } });
       if (url) window.location.href = url;
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not start checkout");
+      toast.error(friendlyError(e) || "Could not start checkout");
     } finally {
       setBusy(null);
     }
@@ -73,7 +74,7 @@ function BillingPage() {
       const { url } = await portal();
       if (url) window.location.href = url;
     } catch (e: any) {
-      toast.error(e?.message ?? "Could not open billing portal");
+      toast.error(friendlyError(e) || "Could not open billing portal");
     } finally {
       setBusy(null);
     }
