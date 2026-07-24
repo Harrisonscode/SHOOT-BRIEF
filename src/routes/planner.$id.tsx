@@ -4,14 +4,13 @@ import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { SHOOT_TYPES, MOODS, GEAR, SHOT_TAGS, TEMPLATES, progressOf, newId, type Shot } from "@/lib/shoot";
-import { Check, Plus, Trash2, X, LayoutTemplate, AlertTriangle, Lock, Calendar as CalendarIcon, Clock, FileDown, Share2, Copy, CheckCheck, Repeat } from "lucide-react";
+import { SHOOT_TYPES, GEAR, SHOT_TAGS, TEMPLATES, progressOf, newId, type Shot } from "@/lib/shoot";
+import { Check, Plus, Trash2, X, LayoutTemplate, AlertTriangle, Lock, Calendar as CalendarIcon, Clock, Share2, Copy, CheckCheck, Repeat } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { generateShootBriefPdf, fetchAvatarAsDataUrl } from "@/lib/pdf";
 import { friendlyError } from "@/lib/errors";
 
 function copyToClipboard(text: string): Promise<void> {
@@ -63,7 +62,6 @@ type Shoot = {
   location: string | null;
   shoot_type: string | null;
   status: string | null;
-  mood_tags: string[] | null;
   shot_list: Shot[] | null;
   gear: string[] | null;
   notes: string | null;
@@ -100,7 +98,7 @@ function Planner() {
       const { data, error } = await supabase.from("shoots").select("*").eq("id", id).maybeSingle();
       if (error || !data) { setNotFound(true); return; }
       skipSave.current = true;
-      setShoot({ ...data, shot_list: Array.isArray(data.shot_list) ? data.shot_list : [], mood_tags: Array.isArray(data.mood_tags) ? data.mood_tags : [], gear: Array.isArray(data.gear) ? data.gear : [] } as any);
+      setShoot({ ...data, shot_list: Array.isArray(data.shot_list) ? data.shot_list : [], gear: Array.isArray(data.gear) ? data.gear : [] } as any);
     })();
   }, [id]);
 
@@ -120,7 +118,6 @@ function Planner() {
           location: shoot.location,
           shoot_type: shoot.shoot_type,
           status: shoot.status,
-          mood_tags: shoot.mood_tags,
           shot_list: shoot.shot_list as any,
           gear: shoot.gear,
           notes: shoot.notes,
@@ -154,7 +151,6 @@ function Planner() {
     setShoot({
       ...shoot,
       shoot_type: name,
-      mood_tags: t.moods,
       shot_list: t.shots.map((text) => ({ id: newId(), text, tag: "Custom", done: false })),
     });
     setShowTemplate(false);
@@ -177,7 +173,6 @@ function Planner() {
         location: shoot.location,
         shoot_type: shoot.shoot_type,
         status: shoot.status,
-        mood_tags: shoot.mood_tags,
         shot_list: shoot.shot_list as any,
         gear: shoot.gear,
         notes: shoot.notes,
@@ -207,7 +202,6 @@ function Planner() {
       !shoot.client_name &&
       !shoot.client_email &&
       !shoot.notes &&
-      (shoot.mood_tags?.length ?? 0) === 0 &&
       (shoot.shot_list?.length ?? 0) === 0 &&
       (shoot.gear?.length ?? 0) === 0;
 
@@ -279,7 +273,6 @@ function Planner() {
         location: shoot.location,
         shoot_type: shoot.shoot_type,
         status: "planning",
-        mood_tags: shoot.mood_tags,
         shot_list: (shoot.shot_list ?? []).map((s) => ({ ...s, done: false })) as any,
         gear: shoot.gear,
         notes: shoot.notes,
@@ -318,24 +311,12 @@ function Planner() {
         {isPro && (
           <button
             onClick={async () => {
-              const avatarDataUrl = profile?.avatar_url ? await fetchAvatarAsDataUrl(profile.avatar_url) : null;
-              generateShootBriefPdf(
-                { ...shoot, shot_list: shoot.shot_list ?? [], mood_tags: shoot.mood_tags ?? [], gear: shoot.gear ?? [] },
-                { name: profile?.display_name ?? "", email: profile?.email ?? user?.email ?? "", businessName: profile?.business_name ?? null, phone: profile?.phone ?? null, website: profile?.website ?? null, avatarDataUrl }
-              );
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm"
-          >
-            <FileDown className="h-4 w-4" /> PDF
-          </button>
-        )}
       </div>
 
       <ShootDetails shoot={shoot} update={update} />
       <ClientDetails shoot={shoot} update={update} />
       <LightTimes location={shoot.location ?? ""} date={shoot.date ?? ""} shootType={shoot.shoot_type ?? ""} />
       <WeatherCard location={shoot.location ?? ""} date={shoot.date ?? ""} />
-      <MoodTags value={shoot.mood_tags ?? []} onChange={(v) => update("mood_tags", v)} />
       <ShotList value={shoot.shot_list ?? []} onChange={(v) => update("shot_list", v)} />
       <GearChecklist value={shoot.gear ?? []} onChange={(v) => update("gear", v)} isPro={isPro} />
       <ExpensesCard shootId={shoot.id} />
@@ -345,7 +326,7 @@ function Planner() {
         <TemplateModal
           onClose={() => setShowTemplate(false)}
           onPick={applyTemplate}
-          hasData={(shoot.shot_list?.length ?? 0) > 0 || (shoot.mood_tags?.length ?? 0) > 0}
+          hasData={(shoot.shot_list?.length ?? 0) > 0}
           isPro={isPro}
         />
       )}
@@ -871,14 +852,6 @@ function weatherCode(c?: number) {
   return "Storm";
 }
 
-function MoodTags({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const toggle = (m: string) => onChange(value.includes(m) ? value.filter((x) => x !== m) : [...value, m]);
-  return (
-    <Card title="Mood Tags">
-      <div className="flex flex-wrap gap-2">{MOODS.map((m) => <Pill key={m} active={value.includes(m)} onClick={() => toggle(m)}>{m}</Pill>)}</div>
-    </Card>
-  );
-}
 
 function ShotList({ value, onChange }: { value: Shot[]; onChange: (v: Shot[]) => void }) {
   const p = progressOf(value);
