@@ -115,11 +115,11 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
           unit_amount: amountPence,
         },
         quantity: 1,
-      },],
+      }],
       metadata: { invoice_id: data.invoice_id, user_id: userId },
       after_completion: {
         type: "redirect",
-        redirect: { url: `https://shootbrief.app/invoice/${invoice.client_token}?paid=1` },
+        redirect: { url: `https://shootbrief.app/invoice/${(invoice as any).client_token}?paid=1` },
       },
     });
 
