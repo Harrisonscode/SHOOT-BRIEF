@@ -308,9 +308,6 @@ function Planner() {
         <button onClick={() => setShowTemplate(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border bg-background hover:bg-muted text-sm">
           <LayoutTemplate className="h-4 w-4" /> Template
         </button>
-        {isPro && (
-          <button
-            onClick={async () => {
       </div>
 
       <ShootDetails shoot={shoot} update={update} />
