@@ -1,12 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { SHOOT_TYPES } from "@/lib/shoot";
 import { toast } from "sonner";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { friendlyError } from "@/lib/errors";
+import { useServerFn } from "@tanstack/react-start";
+import { getStripeConnectUrl, disconnectStripeAccount } from "@/lib/stripe.functions";
 
 export const Route = createFileRoute("/settings")({
   component: () => <AppShell title="Settings"><SettingsPage /></AppShell>,
@@ -14,6 +16,46 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { user, profile, refreshProfile, signOut } = useAuth();
+  const search = useSearch({ strict: false }) as any;
+  const connectStatus = search?.connect;
+  const getConnectUrl = useServerFn(getStripeConnectUrl);
+  const doDisconnect = useServerFn(disconnectStripeAccount);
+  const [connectBusy, setConnectBusy] = useState(false);
+
+  const handleConnectStripe = async () => {
+    setConnectBusy(true);
+    try {
+      const { url } = await getConnectUrl();
+      window.location.href = url;
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+      setConnectBusy(false);
+    }
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!confirm("Disconnect your Stripe account? Payment links will stop working.")) return;
+    setConnectBusy(true);
+    try {
+      await doDisconnect();
+      await refreshProfile();
+      toast.success("Stripe account disconnected");
+    } catch (e: any) {
+      toast.error(friendlyError(e));
+    } finally {
+      setConnectBusy(false);
+    }
+  };
+
+  // Show connect result toast
+  useEffect(() => {
+    if (connectStatus === "success") {
+      refreshProfile();
+      toast.success("Stripe account connected successfully!");
+    } else if (connectStatus === "error") {
+      toast.error("Failed to connect Stripe — please try again");
+    }
+  }, [connectStatus]);
   const navigate = useNavigate();
   const avatarRef = useRef<HTMLInputElement>(null);
 
@@ -336,6 +378,46 @@ function SettingsPage() {
         <button onClick={saveProfile} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">Save branding</button>
         </>)}
       </section>
+
+      {/* Stripe Connect — Studio only */}
+      {profile?.is_studio && (
+        <section className="rounded-lg border bg-card shadow-card p-5 space-y-4">
+          <div>
+            <h2 className="font-semibold">Payment account</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Connect your Stripe account so clients can pay invoices directly to your bank.</p>
+          </div>
+          {profile?.stripe_connect_enabled && profile?.stripe_connect_account_id ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                <CheckCircle className="h-4 w-4" />
+                Stripe account connected
+              </div>
+              <p className="text-xs text-muted-foreground">When clients pay an invoice, money goes directly to your connected Stripe account and then to your bank.</p>
+              <button onClick={handleDisconnectStripe} disabled={connectBusy} className="px-4 py-2 rounded-md border border-destructive text-destructive text-sm font-medium hover:bg-destructive/10 disabled:opacity-60">
+                {connectBusy ? "Disconnecting…" : "Disconnect Stripe"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <AlertCircle className="h-4 w-4" />
+                No Stripe account connected
+              </div>
+              <p className="text-sm text-muted-foreground">Connect your Stripe account to enable online invoice payments. Stripe will guide you through adding your bank details — takes about 5 minutes.</p>
+              <ul className="text-xs text-muted-foreground space-y-1 pl-4 list-disc">
+                <li>Clients pay by card on your invoice page</li>
+                <li>Money goes directly to your bank account</li>
+                <li>Stripe handles all security and compliance</li>
+                <li>Stripe fee: ~1.5% + 20p per UK card transaction</li>
+              </ul>
+              <button onClick={handleConnectStripe} disabled={connectBusy} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#635bff] text-white text-sm font-medium hover:opacity-90 disabled:opacity-60">
+                {connectBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                {connectBusy ? "Redirecting to Stripe…" : "Connect Stripe account"}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Preferences */}
       <section className="rounded-lg border bg-card shadow-card p-5 space-y-4">
