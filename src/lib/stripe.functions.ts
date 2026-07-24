@@ -97,16 +97,26 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
 
     // Verify invoice belongs to this user
     const { data: invoice } = await (supabase.from("invoices") as any)
-      .select("id, total, currency, invoice_number, shoots(client_name, client_email)")
+      .select("id, total, currency, invoice_number, client_token, shoots(client_name, client_email)")
       .eq("id", data.invoice_id)
       .eq("user_id", userId)
       .maybeSingle() as any;
 
     if (!invoice) throw new Error("Invoice not found — it may have been deleted");
 
+    // Get photographer's connected Stripe account
+    const { data: profile } = await (supabase.from("profiles") as any)
+      .select("stripe_connect_account_id, stripe_connect_enabled")
+      .eq("id", userId)
+      .maybeSingle() as any;
+
+    if (!profile?.stripe_connect_account_id || !profile?.stripe_connect_enabled) {
+      throw new Error("Connect your Stripe account in Settings before enabling payment links");
+    }
+
     const amountPence = Math.round(data.amount * 100);
 
-    // Create a Stripe payment link
+    // Create payment link on the photographer's connected account
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [{
         price_data: {
@@ -121,6 +131,8 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
         type: "redirect",
         redirect: { url: `https://shootbrief.app/invoice/${(invoice as any).client_token}?paid=1` },
       },
+    }, {
+      stripeAccount: profile.stripe_connect_account_id,
     });
 
     // Update invoice with payment link URL
@@ -129,4 +141,36 @@ export const createInvoicePaymentLink = createServerFn({ method: "POST" })
       .eq("id", data.invoice_id);
 
     return { url: paymentLink.url };
+  });
+
+export const getStripeConnectUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const clientId = process.env.STRIPE_CONNECT_CLIENT_ID;
+    if (!clientId) throw new Error("Stripe Connect is not configured");
+
+    const { userId } = context;
+    const origin = getOrigin();
+
+    const params = new URLSearchParams({
+      response_type: "code",
+      client_id: clientId,
+      scope: "read_write",
+      redirect_uri: `${origin}/api/public/stripe-connect-callback`,
+      state: userId,
+      "stripe_user[business_type]": "individual",
+      "stripe_user[country]": "GB",
+    });
+
+    return { url: `https://connect.stripe.com/oauth/authorize?${params.toString()}` };
+  });
+
+export const disconnectStripeAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await (supabase.from("profiles") as any)
+      .update({ stripe_connect_account_id: null, stripe_connect_enabled: false } as any)
+      .eq("id", userId);
+    return { ok: true };
   });
