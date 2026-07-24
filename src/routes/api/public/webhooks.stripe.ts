@@ -66,6 +66,21 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
           switch (event.type) {
             case "checkout.session.completed": {
               const session = event.data.object as any;
+
+              // ── Invoice payment link payment ──────────────────────────────
+              // When a client pays an invoice via a Stripe payment link,
+              // the session metadata contains the invoice_id we stored when creating the link
+              if (session.metadata?.invoice_id) {
+                const invoiceId = session.metadata.invoice_id;
+                const { error } = await (supabaseAdmin.from("invoices") as any)
+                  .update({ status: "paid", paid_at: new Date().toISOString() } as any)
+                  .eq("id", invoiceId);
+                if (error) console.error("[stripe-webhook] invoice update failed", error);
+                else console.log("[stripe-webhook] invoice marked as paid:", invoiceId);
+                break;
+              }
+
+              // ── Subscription upgrade ──────────────────────────────────────
               const userId =
                 session.client_reference_id ??
                 session.metadata?.user_id ??
@@ -89,6 +104,21 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
               }
               break;
             }
+
+            // ── Payment intent succeeded (covers payment link payments) ────
+            case "payment_intent.succeeded": {
+              const pi = event.data.object as any;
+              const invoiceId = pi.metadata?.invoice_id;
+              if (invoiceId) {
+                const { error } = await (supabaseAdmin.from("invoices") as any)
+                  .update({ status: "paid", paid_at: new Date().toISOString() } as any)
+                  .eq("id", invoiceId);
+                if (error) console.error("[stripe-webhook] invoice update failed", error);
+                else console.log("[stripe-webhook] invoice marked as paid via payment_intent:", invoiceId);
+              }
+              break;
+            }
+
             case "customer.subscription.created":
             case "customer.subscription.updated": {
               const sub = event.data.object as any;
