@@ -731,12 +731,12 @@ function ShootDetails({ shoot, update }: { shoot: Shoot; update: <K extends keyo
   );
 }
 
-async function geocode(q: string): Promise<{ lat: number; lon: number; name: string } | null> {
+async function geocode(q: string): Promise<{ lat: number; lon: number; name: string; timezone: string } | null> {
   try {
     const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1`);
     const j = await r.json();
     const c = j?.results?.[0];
-    return c ? { lat: c.latitude, lon: c.longitude, name: c.name } : null;
+    return c ? { lat: c.latitude, lon: c.longitude, name: c.name, timezone: c.timezone ?? "UTC" } : null;
   } catch { return null; }
 }
 
@@ -752,13 +752,17 @@ function LightTimes({ location, date, shootType }: { location: string; date: str
       try {
         const r = await fetch(`https://api.sunrise-sunset.org/json?lat=${g.lat}&lng=${g.lon}&date=${date}&formatted=0`);
         const j = await r.json();
-        if (!cancel) setData({ ...j.results, place: g.name });
+        if (!cancel) setData({ ...j.results, place: g.name, timezone: g.timezone });
       } catch {} finally { if (!cancel) setLoading(false); }
     })();
     return () => { cancel = true; };
   }, [location, date]);
 
-  const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: data?.timezone ?? "UTC",
+  });
   const iso = ["Sports", "Nightclub"].includes(shootType) ? "ISO 1600–3200" : "ISO 400–800";
 
   return (
@@ -787,6 +791,9 @@ function LightTimes({ location, date, shootType }: { location: string; date: str
           </div>
           <div className="mt-4 text-sm rounded-md bg-primary-soft/40 px-3 py-2 text-foreground">
             Recommended: <strong>{iso}</strong>
+            {data?.timezone && (
+              <span className="ml-2 text-xs text-muted-foreground">· Times shown in {data.timezone.replace(/_/g, " ")}</span>
+            )}
           </div>
         </>
       )}
