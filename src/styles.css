@@ -239,32 +239,6 @@ main > div {
   width: max-content;
 }
 
-.frame-card {
-  position: relative;
-}
-
-.frame-card::before,
-.frame-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 7px;
-  background-image: radial-gradient(circle, var(--color-background) 1.6px, transparent 2px);
-  background-size: 11px 7px;
-  background-position: 4px center;
-  background-repeat: repeat-x;
-  z-index: 1;
-}
-
-.frame-card::before {
-  top: 0;
-}
-
-.frame-card::after {
-  bottom: 0;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .marquee-track {
     animation: marquee-scroll var(--marquee-duration, 42s) linear infinite;
