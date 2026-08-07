@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import {
   Sun, ListChecks, LayoutTemplate, CloudSun, Check, Menu, X,
-  Calendar, Star, Inbox, Package, Link2, Repeat, Receipt
+  Calendar, Star, Inbox, Package, Link2, Repeat, Receipt, FileText,
+  Heart, Music, Trophy, User, Building2, PartyPopper,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -14,71 +15,94 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Shoot Brief" },
       { property: "og:description", content: "The all-in-one tool for professional photographers." },
     ],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" },
+    ],
   }),
   component: Landing,
 });
 
-const FEATURES = [
-  {
-    icon: Sun,
-    title: "Golden Hour & Weather",
-    desc: "Automatic golden hour, blue hour, sunrise and sunset times for any location. Live weather forecast so you're never caught off guard.",
-  },
-  {
-    icon: ListChecks,
-    title: "Shot Lists & Templates",
-    desc: "Build visual shot lists before the shoot. Tick off frames as you go. Start from a template — Wedding, Sports, Nightclub, Portrait and more.",
-  },
-  {
-    icon: Inbox,
-    title: "Booking Requests",
-    desc: "Your own public booking page. Clients fill in a form, you get an email notification, accept or decline with one click.",
-  },
-  {
-    icon: Link2,
-    title: "Client Portal",
-    desc: "A shareable link per shoot showing your client their timeline, editing progress, gallery link, and your contact details. No login needed.",
-  },
-  {
-    icon: Package,
-    title: "Packages & Pricing",
-    desc: "Create shoot packages with pricing and deliverables. Clients can pick a package when they book. Shown on your booking page.",
-  },
-  {
-    icon: Star,
-    title: "Client Reviews",
-    desc: "After delivery clients leave a star rating from their portal. You approve the ones you want shown on your booking page.",
-  },
-  {
-    icon: Calendar,
-    title: "Calendar Sync",
-    desc: "Subscribe to your shoots in Google Calendar, Apple Calendar or Outlook. Updates automatically when you add or change shoots.",
-  },
-  {
-    icon: Receipt,
-    title: "Expense Tracking",
-    desc: "Log travel, equipment hire and other costs per shoot. See your running total and actual margin.",
-  },
-  {
-    icon: Repeat,
-    title: "Recurring Shoots",
-    desc: "Set any shoot to repeat weekly, monthly or on a custom interval. Creates the full series in one go with shot lists carried over.",
-  },
-  {
-    icon: CloudSun,
-    title: "Inspiration Board",
-    desc: "Save reference images from anywhere — upload or paste a URL. Organise into named galleries and link to specific shoots.",
-  },
-  {
-    icon: LayoutTemplate,
-    title: "Gear Checklist",
-    desc: "Build a gear list per shoot. Tick off as you pack. Never leave a lens at home again.",
-  },
-  {
-    icon: ListChecks,
-    title: "Shoot Packages",
-    desc: "Full PDF brief export for yourself. Shareable client report with a visual timeline showing shoot date, editing progress, and delivery.",
-  },
+// ─── Signature element data: the film-strip marquee ─────────────────────────
+const FRAME_CARDS = [
+  { genre: "Wedding", title: "Sarah & James", sub: "The Grand Hotel", exif: "GOLDEN HR · 8:42PM", icon: Heart, gradient: "from-rose-200 to-rose-300" },
+  { genre: "Nightlife", title: "Warehouse Sessions", sub: "Unit 4, Fri Late", exif: "F/1.8 · 1/125 · ISO 3200", icon: Music, gradient: "from-violet-300 to-indigo-400" },
+  { genre: "Sports", title: "University 1sts", sub: "Bath Recreation Ground", exif: "F/2.8 · 1/1000 · ISO 800", icon: Trophy, gradient: "from-sky-200 to-blue-300" },
+  { genre: "Portrait", title: "Amelia — Headshots", sub: "Studio, North Light", exif: "F/4 · 1/160 · ISO 200", icon: User, gradient: "from-amber-200 to-orange-300" },
+  { genre: "Commercial", title: "Riverside Coffee Co.", sub: "Product & Interior", exif: "F/8 · 1/60 · ISO 100", icon: Building2, gradient: "from-slate-300 to-slate-400" },
+  { genre: "Events", title: "Bath Half Launch", sub: "Guildhall, Evening", exif: "GOLDEN HR · 6:58PM", icon: PartyPopper, gradient: "from-teal-200 to-emerald-300" },
+  { genre: "Wedding", title: "Priya & Alex", sub: "Barn at Lyde Court", exif: "F/2 · 1/200 · ISO 400", icon: Heart, gradient: "from-rose-200 to-pink-300" },
+  { genre: "Nightlife", title: "Neon / Basement", sub: "Sat 11pm–3am", exif: "F/1.4 · 1/100 · ISO 4000", icon: Music, gradient: "from-fuchsia-300 to-purple-400" },
+  { genre: "Sports", title: "Netball Finals", sub: "Indoor Arena", exif: "F/2.8 · 1/1250 · ISO 1600", icon: Trophy, gradient: "from-cyan-200 to-sky-300" },
+  { genre: "Portrait", title: "Founders — LinkedIn", sub: "Rooftop, Golden Hr", exif: "F/2.8 · 1/320 · ISO 100", icon: User, gradient: "from-yellow-200 to-amber-300" },
+  { genre: "Commercial", title: "Mill Lane Apartments", sub: "Real Estate Listing", exif: "F/11 · 1/30 · ISO 100", icon: Building2, gradient: "from-emerald-200 to-teal-300" },
+  { genre: "Events", title: "Graduation Day", sub: "Bath Abbey Green", exif: "F/4 · 1/500 · ISO 200", icon: PartyPopper, gradient: "from-lime-200 to-green-300" },
+];
+
+const ROWS = [
+  { items: FRAME_CARDS.slice(0, 4), duration: 40, reverse: false },
+  { items: FRAME_CARDS.slice(4, 8), duration: 50, reverse: true },
+  { items: FRAME_CARDS.slice(8, 12), duration: 60, reverse: false },
+];
+
+function FrameCard({ f }: { f: (typeof FRAME_CARDS)[number] }) {
+  const Icon = f.icon;
+  return (
+    <div className="frame-card w-[220px] shrink-0 mx-2.5 rounded-sm border border-border bg-card overflow-hidden shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg">
+      <div className={`relative h-24 bg-gradient-to-br ${f.gradient}`}>
+        <Icon className="absolute inset-0 m-auto h-6 w-6 text-black/40" strokeWidth={1.75} />
+        <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-sm bg-black/35 text-[9px] font-exif tracking-wider text-white/95 uppercase">
+          {f.genre}
+        </span>
+      </div>
+      <div className="px-3 py-2.5">
+        <div className="text-sm font-semibold leading-tight truncate">{f.title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5 truncate">{f.sub}</div>
+        <div className="mt-1.5 text-[9.5px] font-exif tracking-wide text-muted-foreground/70">{f.exif}</div>
+      </div>
+    </div>
+  );
+}
+
+function ShootMarquee() {
+  return (
+    <div className="marquee-bleed py-1">
+      <div className="flex flex-col gap-4">
+        {ROWS.map((row, i) => (
+          <div key={i} className="marquee-row">
+            <div
+              className={`marquee-track ${row.reverse ? "marquee-reverse" : ""}`}
+              style={{ ["--marquee-duration" as any]: `${row.duration}s` }}
+            >
+              {[...row.items, ...row.items].map((f, j) => (
+                <FrameCard key={`${i}-${j}`} f={f} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Feature copy ────────────────────────────────────────────────────────────
+const FEATURES_A = [
+  { icon: Sun, title: "Golden Hour & Weather", desc: "Automatic golden hour, blue hour, sunrise and sunset for any location, plus a live forecast so you're never caught off guard." },
+  { icon: ListChecks, title: "Shot Lists & Templates", desc: "Build visual shot lists before the shoot. Tick off frames as you go, starting from Wedding, Sports, Nightclub or Portrait templates." },
+  { icon: Inbox, title: "Booking Requests", desc: "Your own public booking page. Clients fill in a form, you get notified, and accept or decline with one click." },
+  { icon: Link2, title: "Client Portal", desc: "A shareable link per shoot showing timeline, editing progress and gallery link. No login needed on their side." },
+  { icon: Package, title: "Packages & Pricing", desc: "Create shoot packages with pricing and deliverables. Clients pick one straight from your booking page." },
+  { icon: Star, title: "Client Reviews", desc: "After delivery, clients leave a star rating from their portal. You choose which ones show on your booking page." },
+];
+
+const FEATURES_B = [
+  { icon: Calendar, title: "Calendar Sync", desc: "Subscribe to your shoots in Google, Apple or Outlook calendar — updates automatically as shoots change." },
+  { icon: Receipt, title: "Expense Tracking", desc: "Log travel, equipment hire and other costs per shoot. See your running total and actual margin." },
+  { icon: Repeat, title: "Recurring Shoots", desc: "Set a shoot to repeat weekly, monthly or on a custom interval, with shot lists carried over automatically." },
+  { icon: CloudSun, title: "Inspiration Board", desc: "Save reference images from anywhere. Organise into named galleries and link them to specific shoots." },
+  { icon: LayoutTemplate, title: "Gear Checklist", desc: "Build a gear list per shoot and tick off as you pack. Never leave a lens at home again." },
+  { icon: FileText, title: "PDF Brief Export", desc: "Full PDF brief for yourself, plus a shareable client report with a visual shoot-to-delivery timeline." },
 ];
 
 const FREE_FEATURES = [
@@ -111,7 +135,7 @@ function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Nav */}
       <header className="border-b relative">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
@@ -141,106 +165,67 @@ function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-card text-xs font-medium text-muted-foreground mb-6">
-          📷 Built for working photographers
-        </div>
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
-          The tool your photography<br />
-          <span className="text-primary">business actually needs.</span>
-        </h1>
-        <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Plan shoots, manage clients, take bookings, track expenses and deliver a professional client experience — all in one place.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link to="/login" search={{ tab: "signup" } as any} className="px-6 py-3 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 text-sm">
-            Start free — no card needed
-          </Link>
-          <a href="#features" className="px-6 py-3 rounded-md border border-border bg-background font-medium hover:bg-muted text-sm">
-            See all features
-          </a>
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">Free plan available · Pro from £6/month · Cancel anytime</p>
-
-        {/* App mockup */}
-        <div className="mt-16 mx-auto max-w-4xl">
-          <div className="rounded-xl border bg-card shadow-card overflow-hidden">
-            <div className="bg-sidebar text-white px-4 py-3 flex items-center gap-2 text-xs">
-              <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-              <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-              <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-              <span className="ml-2 opacity-60">shootbrief.app/planner</span>
-            </div>
-            <div className="grid grid-cols-12 min-h-[320px]">
-              <div className="col-span-3 bg-sidebar text-white/80 p-4 text-xs space-y-2">
-                <div className="opacity-70 text-[10px] uppercase tracking-wide mb-3">Shoot Brief</div>
-                <div className="px-2 py-1.5 rounded">Dashboard</div>
-                <div className="px-2 py-1.5 rounded border-l-2 border-primary bg-[color:var(--sidebar-active)] text-white">New Shoot</div>
-                <div className="px-2 py-1.5 rounded">Calendar</div>
-                <div className="px-2 py-1.5 rounded">Bookings</div>
-                <div className="px-2 py-1.5 rounded">Reviews</div>
-              </div>
-              <div className="col-span-9 p-6 bg-background text-left">
-                <div className="text-2xl font-semibold">Wedding — Sarah & James</div>
-                <div className="text-sm text-muted-foreground mt-1">Sat 12 July · 10:00am · The Grand Hotel, Manchester</div>
-                <div className="mt-4 flex gap-2 flex-wrap">
-                  <span className="px-2 py-0.5 text-xs rounded-md bg-rose-100 text-rose-700 font-medium">Wedding</span>
-                  <span className="px-2 py-0.5 text-xs rounded-md bg-green-100 text-green-700 font-medium">Contract signed ✓</span>
-                  <span className="px-2 py-0.5 text-xs rounded-md bg-amber-100 text-amber-700 font-medium">Deposit paid</span>
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-3">
-                  {[
-                    { l: "Golden hr", t: "8:42pm", c: "bg-orange-400" },
-                    { l: "Weather", t: "22°C ☀️", c: "bg-yellow-300" },
-                    { l: "Editing", t: "0%", c: "bg-muted" },
-                  ].map((x) => (
-                    <div key={x.l} className="rounded-md border p-3">
-                      <div className="text-xs text-muted-foreground">{x.l}</div>
-                      <div className="font-semibold mt-0.5 text-sm">{x.t}</div>
-                      <div className={`h-1 mt-2 rounded-full ${x.c}`} />
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 space-y-1.5 text-sm">
-                  <div className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ceremony wide shots</div>
-                  <div className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> First dance</div>
-                  <div className="flex items-center gap-2 text-muted-foreground"><span className="h-4 w-4 border rounded-sm inline-block" /> Golden hour portraits</div>
-                </div>
-              </div>
-            </div>
+      <section className="pt-16 pb-4 sm:pt-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex items-center gap-2 text-xs font-exif uppercase tracking-[0.2em] text-primary mb-5">
+            <span className="h-1.5 w-1.5 bg-primary" />
+            Built for working photographers
           </div>
+          <h1 className="font-display text-5xl sm:text-6xl font-semibold tracking-tight leading-[1.05] max-w-2xl">
+            The tool your photography business actually needs.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+            Plan shoots, manage clients, take bookings, track expenses and deliver a professional client experience — all in one place.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/login" search={{ tab: "signup" } as any} className="px-6 py-3 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 text-sm">
+              Start free — no card needed
+            </Link>
+            <a href="#features" className="px-6 py-3 rounded-md border border-border bg-background font-medium hover:bg-muted text-sm">
+              See all features
+            </a>
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground">Free plan available · Pro from £6/month · Cancel anytime</p>
+        </div>
+
+        {/* Signature: continuously drifting shoot frames, film-contact-sheet style */}
+        <div className="mt-14">
+          <ShootMarquee />
         </div>
       </section>
-
-      {/* Social proof strip */}
-      <div className="border-y bg-muted/40 py-8">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide mb-4">Designed for every type of photographer</p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-            {["Wedding", "Portrait", "Sports", "Commercial", "Nightlife", "Events", "Fashion", "Real Estate"].map((t) => (
-              <span key={t} className="px-3 py-1.5 rounded-full border bg-background">{t}</span>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Features */}
       <section id="features" className="py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-3xl font-bold text-center">Everything in one place</h2>
-          <p className="text-center text-muted-foreground mt-2 max-w-xl mx-auto">
-            From the moment a client enquires to the final gallery delivery — Shoot Brief handles the whole workflow.
-          </p>
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-lg bg-card border shadow-card p-5">
-                <div className="h-10 w-10 rounded-md bg-primary-soft text-primary flex items-center justify-center">
-                  <Icon className="h-5 w-5" />
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <h2 className="font-display text-3xl font-semibold">Everything in one place</h2>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              From the moment a client enquires to the final gallery delivery — Shoot Brief handles the whole workflow.
+            </p>
+          </div>
+          <div className="mt-12 grid md:grid-cols-2 gap-x-12">
+            <div className="divide-y divide-border">
+              {FEATURES_A.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="py-5 flex gap-4 first:pt-0">
+                  <Icon className="h-5 w-5 text-primary shrink-0 mt-0.5" strokeWidth={1.75} />
+                  <div>
+                    <div className="font-semibold">{title}</div>
+                    <div className="mt-1 text-sm text-muted-foreground leading-relaxed">{desc}</div>
+                  </div>
                 </div>
-                <div className="mt-4 font-semibold">{title}</div>
-                <div className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{desc}</div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="divide-y divide-border">
+              {FEATURES_B.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="py-5 flex gap-4 first:pt-0 md:first:pt-5">
+                  <Icon className="h-5 w-5 text-primary shrink-0 mt-0.5" strokeWidth={1.75} />
+                  <div>
+                    <div className="font-semibold">{title}</div>
+                    <div className="mt-1 text-sm text-muted-foreground leading-relaxed">{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -250,8 +235,8 @@ function Landing() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Client Experience</div>
-              <h2 className="text-3xl font-bold">Your clients deserve better than a text update</h2>
+              <div className="text-xs font-exif font-semibold text-primary uppercase tracking-wide mb-3">Client Experience</div>
+              <h2 className="font-display text-3xl font-semibold">Your clients deserve better than a text update</h2>
               <p className="mt-4 text-muted-foreground leading-relaxed">
                 Send clients a link to their own portal. They can see their shoot date, editing progress, gallery link, contract and payment status — without logging in or downloading anything.
               </p>
@@ -272,7 +257,7 @@ function Landing() {
                 Try it free
               </Link>
             </div>
-            <div className="rounded-2xl border bg-white shadow-card overflow-hidden">
+            <div className="rounded-lg border bg-white shadow-card overflow-hidden">
               <div className="bg-[#1a1a1a] px-4 py-3 flex items-center gap-2 text-xs text-white/60">
                 <span className="text-white font-medium">📷 Shoot Brief</span>
                 <span className="ml-auto">shootbrief.app/client/...</span>
@@ -327,7 +312,7 @@ function Landing() {
       {/* Pricing */}
       <section id="pricing" className="py-20">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="text-3xl font-bold text-center">Simple pricing</h2>
+          <h2 className="font-display text-3xl font-semibold text-center">Simple pricing</h2>
           <p className="text-center text-muted-foreground mt-2">Start free. Upgrade when you need more.</p>
           <div className="mt-10 grid sm:grid-cols-2 gap-5">
             <PricingCard
@@ -353,7 +338,7 @@ function Landing() {
       {/* CTA */}
       <section className="bg-[#1a1a1a] py-20">
         <div className="mx-auto max-w-2xl px-6 text-center">
-          <h2 className="text-3xl font-bold text-white">Ready to run your photography business properly?</h2>
+          <h2 className="font-display text-3xl font-semibold text-white">Ready to run your photography business properly?</h2>
           <p className="mt-4 text-white/60">Join photographers using Shoot Brief to plan better, impress clients and stay on top of their business.</p>
           <Link to="/login" search={{ tab: "signup" } as any} className="mt-8 inline-flex px-6 py-3 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90">
             Start free — no card needed
