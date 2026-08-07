@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import {
   Sun, ListChecks, LayoutTemplate, CloudSun, Check, Menu, X,
-  Calendar, Star, Inbox, Package, Link2, Repeat, Receipt, FileText,
-  Heart, Music, Trophy, User, Building2, PartyPopper,
+  Calendar, Star, Inbox, Package, Link2, Repeat, Receipt, Mail,
 } from "lucide-react";
+import { TYPE_COLORS } from "@/lib/shoot";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,42 +24,65 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-// ─── Signature element data: the film-strip marquee ─────────────────────────
-const FRAME_CARDS = [
-  { genre: "Wedding", title: "Sarah & James", sub: "The Grand Hotel", exif: "GOLDEN HR · 8:42PM", icon: Heart, gradient: "from-rose-200 to-rose-300" },
-  { genre: "Nightlife", title: "Warehouse Sessions", sub: "Unit 4, Fri Late", exif: "F/1.8 · 1/125 · ISO 3200", icon: Music, gradient: "from-violet-300 to-indigo-400" },
-  { genre: "Sports", title: "University 1sts", sub: "Bath Recreation Ground", exif: "F/2.8 · 1/1000 · ISO 800", icon: Trophy, gradient: "from-sky-200 to-blue-300" },
-  { genre: "Portrait", title: "Amelia — Headshots", sub: "Studio, North Light", exif: "F/4 · 1/160 · ISO 200", icon: User, gradient: "from-amber-200 to-orange-300" },
-  { genre: "Commercial", title: "Riverside Coffee Co.", sub: "Product & Interior", exif: "F/8 · 1/60 · ISO 100", icon: Building2, gradient: "from-slate-300 to-slate-400" },
-  { genre: "Events", title: "Bath Half Launch", sub: "Guildhall, Evening", exif: "GOLDEN HR · 6:58PM", icon: PartyPopper, gradient: "from-teal-200 to-emerald-300" },
-  { genre: "Wedding", title: "Priya & Alex", sub: "Barn at Lyde Court", exif: "F/2 · 1/200 · ISO 400", icon: Heart, gradient: "from-rose-200 to-pink-300" },
-  { genre: "Nightlife", title: "Neon / Basement", sub: "Sat 11pm–3am", exif: "F/1.4 · 1/100 · ISO 4000", icon: Music, gradient: "from-fuchsia-300 to-purple-400" },
-  { genre: "Sports", title: "Netball Finals", sub: "Indoor Arena", exif: "F/2.8 · 1/1250 · ISO 1600", icon: Trophy, gradient: "from-cyan-200 to-sky-300" },
-  { genre: "Portrait", title: "Founders — LinkedIn", sub: "Rooftop, Golden Hr", exif: "F/2.8 · 1/320 · ISO 100", icon: User, gradient: "from-yellow-200 to-amber-300" },
-  { genre: "Commercial", title: "Mill Lane Apartments", sub: "Real Estate Listing", exif: "F/11 · 1/30 · ISO 100", icon: Building2, gradient: "from-emerald-200 to-teal-300" },
-  { genre: "Events", title: "Graduation Day", sub: "Bath Abbey Green", exif: "F/4 · 1/500 · ISO 200", icon: PartyPopper, gradient: "from-lime-200 to-green-300" },
+// ─── Signature element data: shoot cards, styled exactly like the dashboard ──
+type MarqueeShoot = {
+  name: string;
+  date: string;
+  location: string;
+  type: keyof typeof TYPE_COLORS;
+  editingPct: number | null;
+  shotsDone: number;
+  shotsTotal: number;
+};
+
+const SHOOTS: MarqueeShoot[] = [
+  { name: "Olivia & Tom", date: "Sat 15 Aug", location: "The Orangery, Bristol", type: "Wedding", editingPct: 55, shotsDone: 8, shotsTotal: 14 },
+  { name: "County Rugby Final", date: "Sun 9 Aug", location: "Twickenham", type: "Sports", editingPct: null, shotsDone: 0, shotsTotal: 10 },
+  { name: "Reload Fridays", date: "Fri 14 Aug", location: "Leeds", type: "Nightclub", editingPct: 15, shotsDone: 2, shotsTotal: 9 },
+  { name: "Headshots — Maya R.", date: "Tue 11 Aug", location: "Home Studio", type: "Portrait", editingPct: 80, shotsDone: 6, shotsTotal: 6 },
+  { name: "Camden Market Series", date: "Wed 12 Aug", location: "Camden, London", type: "Street", editingPct: null, shotsDone: 0, shotsTotal: 12 },
+  { name: "Grace & Daniel", date: "Sat 22 Aug", location: "Thornbury Castle", type: "Wedding", editingPct: 30, shotsDone: 5, shotsTotal: 16 },
+  { name: "Basketball Society Semis", date: "Thu 13 Aug", location: "Bath Sports Centre", type: "Sports", editingPct: 60, shotsDone: 9, shotsTotal: 12 },
+  { name: "Warehouse 22", date: "Sat 15 Aug", location: "Manchester", type: "Nightclub", editingPct: null, shotsDone: 0, shotsTotal: 8 },
+  { name: "Founders — Nova Labs", date: "Mon 10 Aug", location: "Shoreditch Studio", type: "Portrait", editingPct: 45, shotsDone: 4, shotsTotal: 8 },
+  { name: "Rainy Night Reflections", date: "Fri 7 Aug", location: "Liverpool", type: "Street", editingPct: 90, shotsDone: 9, shotsTotal: 10 },
+  { name: "Chloe & Ben", date: "Sat 29 Aug", location: "Pennard House", type: "Wedding", editingPct: null, shotsDone: 0, shotsTotal: 18 },
+  { name: "5-a-side League Final", date: "Sun 16 Aug", location: "Reading", type: "Sports", editingPct: 25, shotsDone: 3, shotsTotal: 10 },
+  { name: "Neon Nights", date: "Fri 21 Aug", location: "Bristol", type: "Nightclub", editingPct: 10, shotsDone: 1, shotsTotal: 9 },
+  { name: "Portfolio — James K.", date: "Wed 19 Aug", location: "Studio 3", type: "Portrait", editingPct: 70, shotsDone: 5, shotsTotal: 7 },
+  { name: "Market Day Candids", date: "Sat 8 Aug", location: "Borough Market", type: "Street", editingPct: 5, shotsDone: 1, shotsTotal: 11 },
 ];
 
 const ROWS = [
-  { items: FRAME_CARDS.slice(0, 4), duration: 40, reverse: false },
-  { items: FRAME_CARDS.slice(4, 8), duration: 50, reverse: true },
-  { items: FRAME_CARDS.slice(8, 12), duration: 60, reverse: false },
+  { items: SHOOTS.slice(0, 5), duration: 46, reverse: false },
+  { items: SHOOTS.slice(5, 10), duration: 58, reverse: true },
+  { items: SHOOTS.slice(10, 15), duration: 70, reverse: false },
 ];
 
-function FrameCard({ f }: { f: (typeof FRAME_CARDS)[number] }) {
-  const Icon = f.icon;
+function ShootCard({ s }: { s: MarqueeShoot }) {
+  const c = TYPE_COLORS[s.type] ?? TYPE_COLORS.Custom;
+  const pct = Math.round((s.shotsDone / s.shotsTotal) * 100) || 0;
   return (
-    <div className="frame-card w-[220px] shrink-0 mx-2.5 rounded-sm border border-border bg-card overflow-hidden shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg">
-      <div className={`relative h-24 bg-gradient-to-br ${f.gradient}`}>
-        <Icon className="absolute inset-0 m-auto h-6 w-6 text-black/40" strokeWidth={1.75} />
-        <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded-sm bg-black/35 text-[9px] font-exif tracking-wider text-white/95 uppercase">
-          {f.genre}
+    <div className="w-[260px] shrink-0 mx-2 rounded-lg border bg-card shadow-card p-4">
+      <div className="font-semibold text-base leading-tight truncate">{s.name}</div>
+      <div className="mt-1 text-sm text-muted-foreground truncate">{s.date} · {s.location}</div>
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${c.bg} ${c.text}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />{s.type}
         </span>
+        {s.editingPct != null && (
+          <span className="text-xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+            Editing {s.editingPct}%
+          </span>
+        )}
       </div>
-      <div className="px-3 py-2.5">
-        <div className="text-sm font-semibold leading-tight truncate">{f.title}</div>
-        <div className="text-xs text-muted-foreground mt-0.5 truncate">{f.sub}</div>
-        <div className="mt-1.5 text-[9.5px] font-exif tracking-wide text-muted-foreground/70">{f.exif}</div>
+      <div className="mt-3">
+        <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+          <span>{s.shotsDone} of {s.shotsTotal} shots</span><span>{pct}%</span>
+        </div>
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+        </div>
       </div>
     </div>
   );
@@ -75,8 +98,8 @@ function ShootMarquee() {
               className={`marquee-track ${row.reverse ? "marquee-reverse" : ""}`}
               style={{ ["--marquee-duration" as any]: `${row.duration}s` }}
             >
-              {[...row.items, ...row.items].map((f, j) => (
-                <FrameCard key={`${i}-${j}`} f={f} />
+              {[...row.items, ...row.items].map((s, j) => (
+                <ShootCard key={`${i}-${j}`} s={s} />
               ))}
             </div>
           </div>
@@ -102,7 +125,7 @@ const FEATURES_B = [
   { icon: Repeat, title: "Recurring Shoots", desc: "Set a shoot to repeat weekly, monthly or on a custom interval, with shot lists carried over automatically." },
   { icon: CloudSun, title: "Inspiration Board", desc: "Save reference images from anywhere. Organise into named galleries and link them to specific shoots." },
   { icon: LayoutTemplate, title: "Gear Checklist", desc: "Build a gear list per shoot and tick off as you pack. Never leave a lens at home again." },
-  { icon: FileText, title: "PDF Brief Export", desc: "Full PDF brief for yourself, plus a shareable client report with a visual shoot-to-delivery timeline." },
+  { icon: Mail, title: "Automatic Emails", desc: "Shoot Brief emails clients at the right moment on its own — booking confirmed, contract ready to sign, invoice due, gallery delivered — so you're never the one chasing." },
 ];
 
 const FREE_FEATURES = [
@@ -128,7 +151,7 @@ const PRO_FEATURES = [
   "Recurring shoot series",
   "Inspiration board",
   "All 5 shoot templates",
-  "PDF shoot brief export",
+  "Automatic client emails",
 ];
 
 function Landing() {
