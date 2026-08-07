@@ -210,6 +210,77 @@ main > div {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ─── Landing page: display / mono type & film-strip marquee ────────────────── */
+.font-display {
+  font-family: "Space Grotesk", var(--font-sans);
+}
+
+.font-exif {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.marquee-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent);
+}
+
+.marquee-row {
+  overflow: hidden;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+}
+
+.frame-card {
+  position: relative;
+}
+
+.frame-card::before,
+.frame-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background-image: radial-gradient(circle, var(--color-background) 1.6px, transparent 2px);
+  background-size: 11px 7px;
+  background-position: 4px center;
+  background-repeat: repeat-x;
+  z-index: 1;
+}
+
+.frame-card::before {
+  top: 0;
+}
+
+.frame-card::after {
+  bottom: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marquee-track {
+    animation: marquee-scroll var(--marquee-duration, 42s) linear infinite;
+  }
+  .marquee-track.marquee-reverse {
+    animation-direction: reverse;
+  }
+  .marquee-row:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
 /* ─── Animations ─────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
 
